@@ -1,0 +1,11 @@
+{
+  "name": "agentic-gamedev-playbook",
+  "owner": { "name": "Hakhyun Kim", "url": "https://github.com/Hakhyun-Kim" },
+  "plugins": [
+    {
+      "name": "agentic-gamedev",
+      "source": "./",
+      "description": "AI가 만들고 AI가 검증하는 게임 개발 방법론 — 스킬 + MCP 서버 (밸런스 봇, 에셋 0개 그래픽/사운드, 자동 검증)"
+    }
+  ]
+}

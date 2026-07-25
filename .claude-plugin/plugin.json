@@ -1,0 +1,10 @@
+{
+  "name": "agentic-gamedev",
+  "description": "AI가 만들고 AI가 검증하는 게임 개발 방법론 (Agentic GameDev Playbook) — 스킬 + MCP 서버",
+  "version": "1.0.0",
+  "author": { "name": "Hakhyun Kim" },
+  "homepage": "https://github.com/Hakhyun-Kim/agentic-gamedev-playbook",
+  "repository": "https://github.com/Hakhyun-Kim/agentic-gamedev-playbook",
+  "license": "MIT",
+  "keywords": ["gamedev", "agentic", "playbook", "balance-bot", "webaudio", "procedural"]
+}
