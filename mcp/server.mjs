@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { createInterface } from 'node:readline';
 
-const VERSION = '1.8.0';
+const VERSION = '1.9.0';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 /* ---------- 플레이북 로드 & 섹션 파싱 ---------- */
