@@ -1,5 +1,6 @@
-/* MCP 서버 스모크 테스트: 핸드셰이크 → 도구/리소스/프롬프트 왕복 검증 */
+/* MCP 서버 스모크 테스트: 핸드셰이크 → 도구/리소스/프롬프트 왕복 검증 + 버전 3중 대조 */
 import { spawn } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -77,6 +78,14 @@ try {
 
   const ping = await rpc('ping');
   check('ping', !!ping.result);
+
+  // 버전은 세 곳(package.json · plugin.json · server.mjs)에 살아 있어 손으로 맞추면 반드시 어긋난다.
+  // 플레이북 2.5의 원칙을 이 저장소 자신에게 적용 — 합칠 수 없으면 어긋날 때 깨지게 묶는다.
+  const readVer = (p) => JSON.parse(readFileSync(join(ROOT, p), 'utf8')).version;
+  const srcVer = readFileSync(join(ROOT, 'mcp', 'server.mjs'), 'utf8').match(/const VERSION = '([^']+)'/)?.[1];
+  const vers = { 'package.json': readVer('package.json'), 'plugin.json': readVer('.claude-plugin/plugin.json'), 'server.mjs': srcVer };
+  const uniq = [...new Set(Object.values(vers))];
+  check(`버전 3중 일치 (${uniq.length === 1 ? uniq[0] : JSON.stringify(vers)})`, uniq.length === 1);
 
   console.log(failed === 0 ? '\n✅ 모든 MCP 스모크 테스트 통과' : `\n❌ ${failed}개 실패`);
   process.exitCode = failed === 0 ? 0 : 1;
