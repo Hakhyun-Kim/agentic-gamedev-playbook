@@ -1,0 +1,104 @@
+# 🔁 주간 회고 — 매주 월요일 09:15 KST에 게임 저장소들의 지난 주 변화를 읽고
+# 플레이북에 승격할 교훈을 찾아 문서에 반영한다. 근거가 분명한 것만 커밋하고,
+# 사람의 판단이 필요한 것은 REVIEW_QUEUE.md에 남긴다.
+#
+# 실제 작업 지시는 .github/RETRO.md 에 있다 — 프롬프트를 저장소 안에 두어
+# 문서를 고치는 주체의 규율도 리뷰와 diff의 대상이 되게 한다.
+#
+# 필요한 시크릿: ANTHROPIC_API_KEY (없으면 이 워크플로는 조용히 건너뛴다)
+name: Weekly retrospective
+
+on:
+  schedule:
+    - cron: '15 0 * * 1' # 00:15 UTC 월요일 = 09:15 KST 월요일
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weekly-retro # 수동 실행이 스케줄과 겹쳐 두 번 커밋하지 않도록
+
+jobs:
+  retro:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 회고가 지난 주 이력을 읽는다
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # 키가 없는데 매주 빨간불을 켜면 그 알림은 곧 무시당하고, 게이트는 죽는다(§3.6).
+      - name: 키가 없으면 조용히 건너뛴다
+        id: guard
+        env:
+          KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo 'ANTHROPIC_API_KEY 미설정 — 회고를 건너뜁니다. 저장소 Settings > Secrets에 추가하면 활성화됩니다.' >> "$GITHUB_STEP_SUMMARY"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 시작 전 정합성 확인
+        if: steps.guard.outputs.skip != 'true'
+        run: npm test
+
+      - name: 시작 지점 기록
+        id: base
+        if: steps.guard.outputs.skip != 'true'
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - uses: anthropics/claude-code-action@v1
+        if: steps.guard.outputs.skip != 'true'
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          bot_name: d100-retro
+          prompt: |
+            이 저장소의 `.github/RETRO.md` 를 읽고 그 지시서대로 이번 주 회고를 수행하라.
+            지시서가 유일한 권위다 — 이 메시지에 없는 규칙도 거기 있으면 따르고,
+            충돌하면 지시서를 따른다.
+
+            오늘 날짜(KST)와 `git log --since` 로 지난 7일 범위를 스스로 확정하고 시작하라.
+            승격할 교훈이 없으면 커밋하지 말고 이유를 요약해 끝내라.
+            커밋만 하고 푸시는 하지 마라 — 푸시는 검사를 통과한 뒤 워크플로가 한다.
+          claude_args: >-
+            --max-turns 60
+            --allowedTools "Read,Edit,Write,Glob,Grep,Bash(git:*),Bash(gh api:*),Bash(npm run build),Bash(npm test),Bash(node:*)"
+
+      # 게이트가 먼저, 푸시가 나중이다. 회고는 커밋만 하고(RETRO.md), 검사를 통과한
+      # 커밋만 main으로 나간다 — 깨진 문서가 올라간 뒤에 검사해 봐야 늦다.
+      - name: 반영 후 정합성 재검사
+        if: steps.guard.outputs.skip != 'true'
+        run: npm test
+
+      - name: 검증된 커밋만 푸시
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          COMMITS=$(git log --oneline "${{ steps.base.outputs.sha }}..HEAD")
+          if [ -z "$COMMITS" ]; then
+            echo '반영할 교훈 없음 — 커밋 없이 종료(정상).' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git pull --rebase origin main   # 사람이 그사이 먼저 올렸을 수 있다
+          npm test                        # 리베이스가 합본을 어긋나게 했을 수 있으니 한 번 더
+          git push origin HEAD:main
+          { echo '## 🔁 주간 회고 반영'; echo '```'; echo "$COMMITS"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 실패했으면 무엇이 남았는지 기록한다
+        if: failure() && steps.guard.outputs.skip != 'true'
+        run: |
+          {
+            echo '## ❌ 회고 실패 — 푸시하지 않았다'
+            echo '작업 트리에 남은 변경(참고용, 버려짐):'
+            echo '```'
+            git status --short
+            git log --oneline "${{ steps.base.outputs.sha }}..HEAD" || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
