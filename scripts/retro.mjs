@@ -81,12 +81,23 @@ ${TRAILER}
 푸시하지 마라. 권한 설정에서 막혀 있고, 푸시는 npm test를 통과한 뒤 실행기가 한다.`;
 
 log('회고 실행 중 (claude -p) — 몇 분 걸립니다…\n');
+/* 모델은 고정하지 않는다 — 이 기기의 기본값을 쓴다. 특정 모델로 돌리려면
+ * CLAUDE_RETRO_MODEL=claude-opus-5 처럼 환경변수로 넘긴다. */
+const model = process.env.CLAUDE_RETRO_MODEL;
 const claude = spawnSync(
   'claude',
-  ['-p', '--settings', '.claude/retro-settings.json', '--model', 'claude-opus-5'],
+  ['-p', '--settings', '.claude/retro-settings.json', ...(model ? ['--model', model] : [])],
   { cwd: ROOT, shell: true, input: PROMPT, stdio: ['pipe', 'inherit', 'inherit'] },
 );
-if (claude.status !== 0) fail(`claude -p 종료 코드 ${claude.status}`);
+if (claude.status !== 0) {
+  fail(
+    `claude -p 종료 코드 ${claude.status}\n` +
+      '위 출력이 "Not logged in" 이라면 이 기기의 CLI 인증이 끊긴 것입니다 —\n' +
+      '터미널에서 `claude` 를 한 번 실행해 로그인한 뒤 다시 시도하세요.\n' +
+      '(Claude Code 앱 안에서 이 스크립트를 돌리면 자식 프로세스가 앱의 인증을\n' +
+      ' 물려받지 못합니다. 일반 터미널에서 실행하세요.)',
+  );
+}
 
 /* ---------- 검증 → 푸시 ---------- */
 const commits = out(`git log --oneline ${BASE}..HEAD`);

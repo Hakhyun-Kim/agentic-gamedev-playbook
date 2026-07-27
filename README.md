@@ -152,6 +152,9 @@ npm run retro           # 회고 → 커밋 → npm test (푸시 안 함)
 npm run retro -- --push # 검사를 통과하면 푸시까지
 ```
 
+> **일반 터미널에서 실행하세요.** Claude Code 앱 안에서 돌리면 자식 프로세스가 앱의 인증을
+> 물려받지 못해 `Not logged in` 이 납니다. 모델을 고정하려면 `CLAUDE_RETRO_MODEL=claude-opus-5`.
+
 작업 지시서는 [`RETRO.md`](RETRO.md)에 있습니다 — **프롬프트를 저장소 안에** 둔 이유는, 방법론
 문서를 고치는 주체의 규율이 스케줄러 설정 안에 숨어 있으면 리뷰도 diff도 안 되기 때문입니다.
 
