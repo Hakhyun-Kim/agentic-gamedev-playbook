@@ -1,0 +1,35 @@
+{
+  "$comment": "주간 회고(scripts/retro.mjs)가 claude -p 로 넘기는 권한 허용목록. git push는 명시적으로 막는다 — 푸시는 npm test를 통과한 뒤 실행기가 한다. 프롬프트 약속이 아니라 기계적 강제.",
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git diff:*)",
+      "Bash(git status:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git clone:*)",
+      "Bash(gh api:*)",
+      "Bash(gh repo view:*)",
+      "Bash(npm run build)",
+      "Bash(npm test)",
+      "Bash(node scripts/build-playbook.mjs)"
+    ],
+    "deny": [
+      "Bash(git push:*)",
+      "Bash(git reset:*)",
+      "Bash(git rebase:*)",
+      "Bash(git checkout:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh release:*)",
+      "Bash(gh secret:*)",
+      "Bash(npm publish:*)"
+    ]
+  }
+}

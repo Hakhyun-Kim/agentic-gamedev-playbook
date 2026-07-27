@@ -1,6 +1,8 @@
 # 주간 회고 에이전트 — 작업 지시서
 
-`.github/workflows/weekly-retro.yml` 이 이 파일을 읽혀 실행한다.
+`npm run retro`(→ [`scripts/retro.mjs`](scripts/retro.mjs))가 이 파일을 읽혀 `claude -p` 로 실행한다.
+API 키는 필요 없다 — 그 기기에 이미 로그인된 Claude Code 인증을 쓴다.
+
 **프롬프트를 저장소 안에 두는 이유**: 방법론 문서를 고치는 주체의 규율이 문서 밖(스케줄러 설정)에
 숨어 있으면 리뷰도 diff도 안 된다. 여기서 고치면 그다음 회고부터 바로 반영된다.
 
@@ -72,9 +74,13 @@ Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 
 - 제목: `v<버전>: <요지> (<절 번호> 신설|보강)`
 - 본문: **근거 커밋 sha와 날짜를 반드시 포함.** 링크 없는 주장 금지.
+- 마지막 줄에 실행기가 알려 준 `Retro-Run: <주차>` 트레일러를 넣는다 — 같은 주에 두 번 도는 것을
+  막는 표식이다(플레이북 11.3 멱등 원칙).
 
-⚠️ **커밋만 하고 푸시는 하지 마라.** 푸시는 워크플로가 `npm test`를 다시 통과시킨 뒤에 한다.
+⚠️ **커밋만 하고 푸시는 하지 마라.** 푸시는 실행기가 `npm test`를 다시 통과시킨 뒤에 한다.
 네가 먼저 밀면 검사가 사후약방문이 되고, 깨진 문서가 main에 남는다.
+(약속이 아니라 강제다 — `git push`는 [`.claude/retro-settings.json`](.claude/retro-settings.json)에서
+거부된다. 막혔다고 우회하려 들지 마라.)
 
 ## 아무것도 안 할 때
 

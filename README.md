@@ -141,17 +141,26 @@ node mcp/server.mjs   # 서버 직접 실행 (stdio)
 
 ### 자동화
 
-| 워크플로 | 언제 | 하는 일 |
-|---|---|---|
-| [`ci.yml`](.github/workflows/ci.yml) | 푸시·PR마다 | 원천·합본·스킬·MCP 정합성 게이트 |
-| [`weekly-retro.yml`](.github/workflows/weekly-retro.yml) | 월요일 09:15 KST | 게임 저장소들의 지난 주 변화 → 플레이북 승격 |
+**CI** ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) — 푸시·PR마다 원천·합본·스킬·MCP
+정합성 게이트. 키가 필요 없습니다.
 
-회고의 작업 지시서는 [`.github/RETRO.md`](.github/RETRO.md)에 있습니다 — **프롬프트를 저장소 안에**
-둔 이유는, 방법론 문서를 고치는 주체의 규율이 스케줄러 설정 안에 숨어 있으면 리뷰도 diff도
-안 되기 때문입니다. 회고는 커밋만 하고, `npm test`를 통과한 커밋만 워크플로가 푸시합니다.
+**주간 회고** — 게임 저장소들의 지난 주 변화를 읽어 플레이북에 승격합니다. GitHub Actions가 아니라
+**로컬에서 `claude -p` 로** 돕니다. API 키 없이 그 기기의 Claude Code 로그인을 그대로 씁니다.
 
-회고에는 `ANTHROPIC_API_KEY` 시크릿이 필요합니다. 없으면 **조용히 건너뜁니다**(§3.6 — 항상
-빨간 게이트는 곧 무시당하고, 그 순간 죽은 장치가 됩니다).
+```bash
+npm run retro           # 회고 → 커밋 → npm test (푸시 안 함)
+npm run retro -- --push # 검사를 통과하면 푸시까지
+```
+
+작업 지시서는 [`RETRO.md`](RETRO.md)에 있습니다 — **프롬프트를 저장소 안에** 둔 이유는, 방법론
+문서를 고치는 주체의 규율이 스케줄러 설정 안에 숨어 있으면 리뷰도 diff도 안 되기 때문입니다.
+
+세 가지가 강제됩니다(플레이북 11.3):
+- **멱등** — 이번 주 회고 커밋(`Retro-Run: <주차>` 트레일러)이 이미 있으면 즉시 종료
+- **게이트 먼저** — 회고는 커밋만 합니다. `git push`는
+  [`.claude/retro-settings.json`](.claude/retro-settings.json)에서 **거부**되고,
+  `npm test`를 통과한 커밋만 실행기가 밉니다
+- **침묵** — 교훈이 없으면 아무것도 커밋하지 않습니다. 빈 주는 정상입니다
 
 ## 라이선스
 

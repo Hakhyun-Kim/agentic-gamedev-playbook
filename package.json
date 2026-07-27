@@ -9,7 +9,8 @@
   "scripts": {
     "start": "node mcp/server.mjs",
     "build": "node scripts/build-playbook.mjs",
-    "test": "node scripts/test-mcp.mjs"
+    "test": "node scripts/test-mcp.mjs",
+    "retro": "node scripts/retro.mjs"
   },
   "engines": {
     "node": ">=18"
