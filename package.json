@@ -1,6 +1,6 @@
 {
   "name": "agentic-gamedev-playbook",
-  "version": "1.11.0",
+  "version": "1.12.0",
   "description": "AI가 만들고 AI가 검증하는 게임 개발 방법론 — 플레이북 문서 + Claude Code 스킬 + 의존성 0개 MCP 서버",
   "type": "module",
   "bin": {
