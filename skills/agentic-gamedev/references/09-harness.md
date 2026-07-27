@@ -59,3 +59,39 @@ for (const shard of difficulties.flatMap(d => profiles.map(p => [d, p]))) {   //
 빨간불을 켜야 하고, 크래시는 재시도 대상입니다. 둘을 뭉뚱그려 재시도하면 진짜 회귀를 놓치고,
 둘을 뭉뚱그려 실패 처리하면 게이트가 무용지물이 됩니다. 흡수한 크래시 횟수는 로그에 남기세요 —
 조용히 삼키면 툴체인이 썩어가는 걸 아무도 모릅니다.
+
+### 9.2 소리는 귀로만 확인된다 — 그래서 **노드를 세라**
+
+화면은 스크린샷으로 회수하면 되지만(9장 위쪽), 소리는 헤드리스에서 들을 수 없습니다.
+그래서 "믹서가 실제로 섰는가 · 리버브가 걸렸는가 · 자리 소리가 붙었는가"가 조용히 깨진 채
+배포되기 가장 쉬운 항목입니다. 방법은 하나입니다: **앱 코드보다 먼저 `AudioContext`를 감싸
+무엇이 만들어지는지 센다.**
+
+```js
+await ctx.addInitScript(() => {                 // Playwright: 페이지 스크립트보다 먼저 실행
+  const Orig = window.AudioContext;
+  window.__audio = { osc: 0, buf: 0, conv: 0, panner: 0, comp: 0, ctx: null };
+  window.AudioContext = function (...a) { const c = new Orig(...a); window.__audio.ctx = c; return c; };
+  window.AudioContext.prototype = Orig.prototype;
+  for (const [k, m] of [['osc','createOscillator'], ['buf','createBufferSource'],
+                        ['conv','createConvolver'], ['panner','createPanner'],
+                        ['comp','createDynamicsCompressor']]) {
+    const orig = Orig.prototype[m];
+    Orig.prototype[m] = function (...a) { window.__audio[k]++; return orig.apply(this, a); };
+  }
+});
+```
+
+이것만으로 게이트가 세 줄 생깁니다: 컴프레서 1개(마스터 버스가 하나로 모였나) ·
+컨볼버 1개(리버브) · 패너 1개 이상(자리 소리). 3D 오디오는 한 걸음 더 갈 수 있습니다 —
+캐릭터를 순간이동시키고 `ctx.listener.positionX.value`가 따라오는지 보면 **귀가 어디 달렸는지**를
+숫자로 확인할 수 있습니다(5.4 ③의 함정이 그대로 회귀 테스트가 됩니다).
+
+**세는 대상은 "구현"이 아니라 "약속"이어야 합니다.** 처음에는 "마을 트랙에는 북이 없다"를
+`createBufferSource` 호출 수로 검사했는데, 뒤에 가야금을 Karplus–Strong(버퍼 재생)으로
+바꾸자 이 게이트가 깨졌습니다 — 소리는 멀쩡한데 테스트만 틀린 것입니다. 노드 종류로
+악기를 구분하려 들면 **테스트가 구현을 따라다니게** 됩니다. "전투 트랙이 평상시보다 촘촘하다"
+처럼 바뀌어도 참인 명제로 바꾸세요.
+
+> 시간 표본을 뜰 때는 거리가 아니라 **속도**로 판정하세요. 헤드리스 CI의 타이머는 부하에 따라
+> 늘어지므로 "100ms에 몇 m 움직였나"는 흔들리지만 "m/s가 걷기 속도의 몇 배인가"는 안정적입니다.

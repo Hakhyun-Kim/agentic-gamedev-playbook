@@ -13,7 +13,7 @@
 import { createInterface } from 'node:readline';
 import { composePlaybook } from '../scripts/playbook-source.mjs';
 
-const VERSION = '1.13.0';
+const VERSION = '1.14.0';
 
 /* ---------- 플레이북 로드 & 섹션 파싱 ----------
  * 원천은 skills/agentic-gamedev/references/*.md (장별 파일)이다.
