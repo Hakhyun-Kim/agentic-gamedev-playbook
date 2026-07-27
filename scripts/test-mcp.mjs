@@ -1,10 +1,9 @@
-/* MCP 서버 스모크 테스트: 핸드셰이크 → 도구/리소스/프롬프트 왕복 검증 + 버전 3중 대조 */
+/* MCP 서버 스모크 테스트: 핸드셰이크 → 도구/리소스/프롬프트 왕복 검증
+ * + 버전 3중 대조 + 플레이북 합본 신선도 + 스킬↔장별 파일 링크 검증 */
 import { spawn } from 'node:child_process';
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
-
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { ROOT, REF_DIR, CHAPTERS, composePlaybook } from './playbook-source.mjs';
 const server = spawn(process.execPath, [join(ROOT, 'mcp', 'server.mjs')], { stdio: ['pipe', 'pipe', 'inherit'] });
 
 const pending = new Map();
@@ -86,6 +85,27 @@ try {
   const vers = { 'package.json': readVer('package.json'), 'plugin.json': readVer('.claude-plugin/plugin.json'), 'server.mjs': srcVer };
   const uniq = [...new Set(Object.values(vers))];
   check(`버전 3중 일치 (${uniq.length === 1 ? uniq[0] : JSON.stringify(vers)})`, uniq.length === 1);
+
+  // ---- 원천(references/*.md) ↔ 생성물(PLAYBOOK.md) ↔ 스킬(SKILL.md) 대조 ----
+  // 셋 다 같은 내용을 가리켜야 한다. 같은 이유로 합칠 수 없으니 어긋나면 깨지게 묶는다.
+  const onDisk = readdirSync(REF_DIR).filter((f) => f.endsWith('.md')).sort();
+  check(
+    `references 목록 일치 (${CHAPTERS.length}장)`,
+    onDisk.length === CHAPTERS.length && onDisk.every((f) => CHAPTERS.includes(f)),
+  );
+
+  const built = readFileSync(join(ROOT, 'PLAYBOOK.md'), 'utf8').replace(/\r\n/g, '\n');
+  check('PLAYBOOK.md 최신 (npm run build)', built === composePlaybook());
+
+  const skill = readFileSync(join(ROOT, 'skills', 'agentic-gamedev', 'SKILL.md'), 'utf8');
+  const linked = [...skill.matchAll(/references\/([\w.-]+\.md)/g)].map((m) => m[1]);
+  const dangling = [...new Set(linked)].filter((f) => !CHAPTERS.includes(f));
+  check(`SKILL.md 참조 경로 유효 (${new Set(linked).size}개)`, linked.length > 0 && dangling.length === 0);
+  if (dangling.length) console.log(`   존재하지 않는 파일: ${dangling.join(', ')}`);
+
+  const unlinked = CHAPTERS.filter((f) => f !== '00-intro.md' && !linked.includes(f));
+  check(`모든 장이 SKILL.md에서 도달 가능`, unlinked.length === 0);
+  if (unlinked.length) console.log(`   스킬이 안내하지 않는 장: ${unlinked.join(', ')}`);
 
   console.log(failed === 0 ? '\n✅ 모든 MCP 스모크 테스트 통과' : `\n❌ ${failed}개 실패`);
   process.exitCode = failed === 0 ? 0 : 1;

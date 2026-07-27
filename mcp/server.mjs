@@ -3,23 +3,23 @@
  * Agentic GameDev Playbook — MCP 서버 (의존성 0개)
  *
  * stdio 위에서 개행 구분 JSON-RPC 2.0으로 MCP 프로토콜을 구현한다.
- * PLAYBOOK.md를 런타임에 파싱하므로 문서가 곧 단일 진실 원천이다.
+ * skills/agentic-gamedev/references/*.md 를 런타임에 합쳐 파싱하므로 문서가 곧 단일 진실 원천이다.
  *
  * 사용:
  *   claude mcp add gamedev-playbook -- node mcp/server.mjs
  *   또는
  *   claude mcp add gamedev-playbook -- npx -y github:Hakhyun-Kim/agentic-gamedev-playbook
  * ===================================================== */
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
 import { createInterface } from 'node:readline';
+import { composePlaybook } from '../scripts/playbook-source.mjs';
 
-const VERSION = '1.12.0';
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const VERSION = '1.13.0';
 
-/* ---------- 플레이북 로드 & 섹션 파싱 ---------- */
-const PLAYBOOK = readFileSync(join(ROOT, 'PLAYBOOK.md'), 'utf8');
+/* ---------- 플레이북 로드 & 섹션 파싱 ----------
+ * 원천은 skills/agentic-gamedev/references/*.md (장별 파일)이다.
+ * 스킬은 필요한 장만 읽고, 이 서버는 같은 파일들을 합쳐 서빙한다 —
+ * 두 배포 형태가 구조적으로 같은 내용을 본다. PLAYBOOK.md는 그 합본의 생성물. */
+const PLAYBOOK = composePlaybook();
 
 function parseSections(md) {
   const lines = md.split(/\r?\n/);

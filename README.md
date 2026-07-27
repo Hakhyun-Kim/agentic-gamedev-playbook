@@ -37,9 +37,26 @@
 | 부트스트랩 체크리스트 | 새 게임 시작 시 복사해 쓰는 20항목 |
 
 > 이 문서는 **스스로 갱신됩니다.** 주간 회고 에이전트가 게임 저장소들의 변화를 읽어 근거가 분명한
-> 교훈은 직접 커밋하고, 사람의 판단이 필요한 것만 [REVIEW_QUEUE.md](REVIEW_QUEUE.md)에 남깁니다.
+> 교훈은 해당 장(`references/`)에 직접 커밋하고, 사람의 판단이 필요한 것만
+> [REVIEW_QUEUE.md](REVIEW_QUEUE.md)에 남깁니다.
 
-## 사용법 — 세 가지 중 편한 것
+## 저장소 구조 — 원천은 장별 파일 하나뿐
+
+```
+skills/agentic-gamedev/
+  SKILL.md          ← 실행용 요약 + 라우팅 ("밸런스 작업이면 03을 열어라")
+  references/       ← ★ 단일 진실 원천 (장별 15개 파일)
+PLAYBOOK.md         ← references를 이어 붙인 합본 (생성물, 사람이 읽는 용도)
+mcp/server.mjs      ← 같은 references를 합쳐 도구/리소스로 서빙
+```
+
+문서를 고칠 때는 **`references/` 의 해당 장만** 고치고 `npm run build` 로 합본을 재생성합니다.
+셋이 어긋나면 `npm test` 가 실패합니다 — 플레이북 2.5(합칠 수 없으면 어긋날 때 깨지게 묶어라)를
+이 저장소 자신에게 적용한 것입니다.
+
+덕분에 **스킬은 MCP 서버 없이도 완결**됩니다. 필요한 장만 `Read` 로 펼치므로 컨텍스트도 아낍니다.
+
+## 사용법 — 네 가지 중 편한 것
 
 ### ① 그냥 문서로 읽기
 
@@ -56,7 +73,19 @@
 - **스킬** `agentic-gamedev` — "게임 만들어줘", "밸런스 맞춰줘", "퀄리티업" 같은 요청에서 자동 발동해 방법론대로 작업합니다.
 - **MCP 서버** `gamedev-playbook` — 아래 도구/프롬프트가 함께 등록됩니다.
 
-### ③ MCP 서버 단독 연결 (Claude Code / 다른 MCP 클라이언트)
+### ③ 스킬만 단독으로 (Claude.ai / Claude Desktop / 다른 에이전트 도구)
+
+MCP 서버를 띄울 수 없는 환경이면 `skills/agentic-gamedev/` 폴더만 있으면 됩니다 —
+`SKILL.md` 와 `references/` 가 함께 있으면 그 자체로 완결된 스킬입니다.
+
+```bash
+git clone https://github.com/Hakhyun-Kim/agentic-gamedev-playbook
+cd agentic-gamedev-playbook/skills && zip -r agentic-gamedev.zip agentic-gamedev
+```
+
+Claude Code라면 이 폴더를 `~/.claude/skills/` 또는 프로젝트의 `.claude/skills/` 에 복사해도 됩니다.
+
+### ④ MCP 서버 단독 연결 (Claude Code / 다른 MCP 클라이언트)
 
 의존성 0개, Node 18+만 있으면 됩니다.
 
@@ -102,11 +131,13 @@ claude mcp add gamedev-playbook -- node agentic-gamedev-playbook/mcp/server.mjs
 ## 개발
 
 ```bash
-npm test          # MCP 서버 스모크 테스트 (12항목)
+npm run build         # references/*.md → PLAYBOOK.md 재생성
+npm test              # MCP 스모크 + 버전 3중 대조 + 원천/합본/스킬 일치 (17항목)
 node mcp/server.mjs   # 서버 직접 실행 (stdio)
 ```
 
-서버는 `PLAYBOOK.md`를 런타임에 파싱합니다 — **문서를 고치면 도구 응답도 바뀝니다** (단일 진실 원천).
+서버는 `references/*.md`를 런타임에 합쳐 파싱합니다 — **장 파일을 고치면 도구 응답도 바뀝니다.**
+합본(`PLAYBOOK.md`)만 고치면 `npm test`가 실패하니, 항상 장 파일을 고치고 빌드하세요.
 
 ## 라이선스
 
