@@ -61,8 +61,11 @@ main     — 배선 컨트롤러 (고정 타임스텝: while (acc >= 1/60) tick(
   공개"보다 "결과를 시드로 재현해 보여주기"가 강하다. 실시간 값(`block.timestamp` 등)이 섞이는
   요소는 재현 불가 — 검증 범위를 문서에 명시할 것(2.2.1).
 - 같은 수치가 두 언어·두 런타임에 살면 합칠 수 없다 — **소스를 파싱해 대조하는 검사**로 묶어라.
+- 세션 저장은 **시뮬레이션이 멈춘 안전한 지점에서만** 스냅샷 찍고, 직렬화는 즉시·쓰기는
+  유휴 시간(`requestIdleCallback`+timeout, `pagehide`/`visibilitychange`로 flush)으로 미뤄라.
+  불러오기는 파일을 의심하는 입력으로 다뤄 clamp·미지 id 폐기·자리 겹침은 대피시켜라.
 
-→ 전문(생성기 교체 함정 5가지, 소스 대조 검사): [`references/02-architecture.md`](references/02-architecture.md)
+→ 전문(생성기 교체 함정 5가지, 소스 대조 검사, 세션 저장): [`references/02-architecture.md`](references/02-architecture.md)
 
 ## 2. 코어 루프가 돌면 즉시 밸런스 봇 ★ 이 방법론의 심장
 
@@ -89,6 +92,9 @@ main     — 배선 컨트롤러 (고정 타임스텝: while (acc >= 1/60) tick(
 
 CI 실측 함정 셋: **프레시 프로필**(CI는 항상 첫 방문자 — 인트로 분기를 범용 클릭 규칙보다 먼저) ·
 **줄일 건 로직이 아니라 픽셀**(뷰포트 축소 + 저품질 강제) · **에러 필터**(by-design 404 제외).
+
+기준선 이탈이 전부 "되돌릴 회귀"는 아니다 — **게임 규칙 버그를 고쳐서 생긴 정당한 이탈**이면
+값을 되돌리지 말고 재측정해 새 기준선으로 못박고, 이유를 `baseline.json` comment에 적어라.
 
 → 전문(표본 없는 결정점 기대값 검사, 시계 주입, 근접사 측정, 렌더 스파이크 오염): [`references/03-balancing.md`](references/03-balancing.md)
 
