@@ -236,3 +236,47 @@ export function deriveIntensity({ hpRatio, comboMult, bossActive, bossHpRatio, s
 > 오디오 노드 개수(9.2)로 "레이어가 실제로 스케줄되는가"도 셀 수 있습니다. 하지만 **잘
 > 들리는지(청감)는 사람이 들어야 압니다** — 합성이 옳아도 리듬감이 어색할 수 있다는 뜻이라,
 > 헤드리스 통과를 "다 됐다"로 착각하지 마세요.
+
+### 5.6 효과음이 배경음에 묻힌다면 볼륨을 올리지 말고 **배경음을 잠깐 비켜세워라**
+
+5.2의 리미터는 소리가 **찢어지지 않게** 할 뿐입니다. 타격음이 BGM과 같은 대역에서 겹치면
+찢어지지 않으면서 그냥 **묻힙니다.** 여기서 효과음 볼륨을 올리면 전체가 시끄러워지기만 하고,
+BGM 볼륨을 내리면 조용한 순간까지 밋밋해집니다. 답은 **효과음이 나는 그 순간에만 BGM을
+살짝 눌렀다 되돌리는 것**(사이드체인 더킹)입니다.
+
+```js
+// music 버스와 출력 사이에 게인 하나. 평소 1, 효과음이 나면 잠깐 내렸다 돌아온다.
+export function duckBgm(amount = 0.4, dur = 0.4) {
+  const t = c.currentTime;
+  duckGain.gain.cancelScheduledValues(t);
+  duckGain.gain.setValueAtTime(duckGain.gain.value, t); // ← 연타해도 예약이 쌓이지 않게
+  duckGain.gain.linearRampToValueAtTime(1 - amount, t + 0.04); // 내릴 땐 빠르게(자리를 낸다)
+  duckGain.gain.exponentialRampToValueAtTime(1, t + dur);      // 올릴 땐 느리게(펌핑 방지)
+}
+```
+
+- **내림은 빠르게, 복귀는 느리게.** 40ms 안에 안 내려가면 자리가 안 생기고, 0.35~0.4초보다
+  빨리 돌아오면 연타할 때 BGM이 들썩이는 게 들립니다(펌핑).
+- **연타 대비로 현재값부터 다시 그리세요.** `cancelScheduledValues` + `setValueAtTime(현재값)`
+  없이 램프만 걸면 예약이 겹쳐 게인이 튑니다.
+- **sfx가 music을 직접 부르게 하지 마세요 — 순환 의존이 됩니다.** sfx는 "등록된 더커가 있으면
+  부른다"만 알고, 배선은 2.1의 컨트롤러가 합니다. 이벤트 방출 규약(2.4)과 같은 결입니다.
+  ```js
+  // sfx: registerDucker(fn) 로 받아 두고 재생 시점에 fn?.(0.35, 0.35)
+  // main: registerDucker((amt, dur) => music.duck(amt, dur))
+  ```
+
+**같은 배선으로 두 가지가 더 붙습니다.**
+
+- **마스터 로우패스 한 개** — 기본 20kHz(사실상 통과)로 두고 상태에 따라
+  `setTargetAtTime(target, now, 0.2)`으로 서서히 닫으면 **믹스 전체의 색**이 바뀝니다.
+  5.5가 "같은 트랙 안의 밀도"라면 이건 "믹스 전체의 톤"이라, 둘은 겹치지 않고 함께 씁니다.
+- **한 소리 안에도 흐름을 주세요.** `tone(freq, …)`를 주파수 **배열**을 받는 형태로 넓히면
+  (지점마다 `exponentialRampToValueAtTime`), 레시피 수를 늘리지 않고도 기계적인 느낌이
+  줄어듭니다. 여기에 LFO 비브라토(`lfo → lfoGain → osc.frequency`)와 필터 컷오프 스윕을
+  옵션으로 얹으면 같은 26개 레시피가 훨씬 덜 삑삑거립니다.
+
+> 실측(2026-08-05): 용사 수학 디펜스(`148a82b`)와 백층 던전(`45f0102`)에 **같은 날 같은
+> 시스템**이 들어갔습니다 — 더킹 기본값 0.35~0.4 / 0.35~0.4초, 마스터 로우패스 Q 0.7,
+> `registerDucker` 배선까지 동일합니다. 장르도 스택도 다른 두 게임(Vanilla JS · React+TS)에
+> 손대는 곳이 `sfx`·`music`·배선부 셋뿐이었다는 점이 이 기법이 이식 가능하다는 근거입니다.
