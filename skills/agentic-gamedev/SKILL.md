@@ -65,7 +65,11 @@ main     — 배선 컨트롤러 (고정 타임스텝: while (acc >= 1/60) tick(
   유휴 시간(`requestIdleCallback`+timeout, `pagehide`/`visibilitychange`로 flush)으로 미뤄라.
   불러오기는 파일을 의심하는 입력으로 다뤄 clamp·미지 id 폐기·자리 겹침은 대피시켜라.
 
-→ 전문(생성기 교체 함정 5가지, 소스 대조 검사, 세션 저장): [`references/02-architecture.md`](references/02-architecture.md)
+- 생성 콘텐츠가 다른 시스템의 값(적 체력·골드 등)에 의존하면, 생성기가 `needs`/`calc`
+  같은 검증용 메타데이터를 스스로 신고하게 하고 값을 바꾸는 모든 상태(버프 포함)에서
+  검사하라(2.7).
+
+→ 전문(생성기 교체 함정 5가지, 소스 대조 검사, 세션 저장, 생성 콘텐츠 자기신고 검증): [`references/02-architecture.md`](references/02-architecture.md)
 
 ## 2. 코어 루프가 돌면 즉시 밸런스 봇 ★ 이 방법론의 심장
 
