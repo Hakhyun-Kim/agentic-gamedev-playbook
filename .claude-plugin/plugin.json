@@ -1,7 +1,7 @@
 {
   "name": "agentic-gamedev",
   "description": "AI가 만들고 AI가 검증하는 게임 개발 방법론 (Agentic GameDev Playbook) — 스킬 + MCP 서버",
-  "version": "1.35.0",
+  "version": "1.36.0",
   "author": {
     "name": "Hakhyun Kim"
   },
