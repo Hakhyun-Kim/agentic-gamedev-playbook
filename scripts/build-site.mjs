@@ -1,18 +1,22 @@
 #!/usr/bin/env node
 /* =====================================================
- * GitHub Pages 정적 웹 앱 데이터 및 리소스 생성기 (`npm run build:site`)
+ * 웹 앱 데이터 및 정적 번들 생성기 (`npm run build:site`)
  *
  * references/en/*.md, references/ko/*.md, posts/en/*.md, posts/ko/*.md를
- * 읽어 docs/data.json으로 직렬화하고, site/ 정적 리소스를 docs/로 복사합니다.
+ * 읽어 dist/data.json으로 직렬화하고, site/ 정적 리소스를 dist/로 복사합니다.
  * ===================================================== */
-import { writeFileSync, readFileSync, readdirSync, copyFileSync, existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { writeFileSync, readFileSync, readdirSync, copyFileSync, existsSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { ROOT, CHAPTERS, readChapter } from './playbook-source.mjs';
 
-const DOCS_DIR = join(ROOT, 'docs');
+const DIST_DIR = join(ROOT, 'dist');
 const SITE_DIR = join(ROOT, 'site');
 const POSTS_DIR = join(ROOT, 'posts');
+
+if (!existsSync(DIST_DIR)) {
+  mkdirSync(DIST_DIR, { recursive: true });
+}
+
 
 function parseFrontmatter(raw) {
   const norm = raw.replace(/\r\n/g, '\n');
@@ -92,15 +96,15 @@ const siteData = {
 };
 
 // 1. data.json 저장
-writeFileSync(join(DOCS_DIR, 'data.json'), JSON.stringify(siteData, null, 2), 'utf8');
-console.log(`✅ docs/data.json 생성 완료 (${siteData.chapters.en.length}개 EN 장, ${siteData.chapters.ko.length}개 KO 장, ${siteData.posts.en.length}개 EN 블로그글, ${siteData.posts.ko.length}개 KO 블로그글)`);
+writeFileSync(join(DIST_DIR, 'data.json'), JSON.stringify(siteData, null, 2), 'utf8');
+console.log(`✅ dist/data.json 생성 완료 (${siteData.chapters.en.length}개 EN 장, ${siteData.chapters.ko.length}개 KO 장, ${siteData.posts.en.length}개 EN 블로그글, ${siteData.posts.ko.length}개 KO 블로그글)`);
 
-// 2. site/ 파일들을 docs/로 복사
+// 2. site/ 파일들을 dist/로 복사
 const siteFiles = ['index.html', 'styles.css', 'app.js'];
 for (const f of siteFiles) {
   const src = join(SITE_DIR, f);
   if (existsSync(src)) {
-    copyFileSync(src, join(DOCS_DIR, f));
-    console.log(`✅ docs/${f} 복사 완료`);
+    copyFileSync(src, join(DIST_DIR, f));
+    console.log(`✅ dist/${f} 복사 완료`);
   }
 }

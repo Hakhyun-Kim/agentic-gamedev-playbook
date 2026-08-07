@@ -111,12 +111,12 @@ try {
   check(`모든 장이 SKILL.md에서 도달 가능`, unlinked.length === 0);
   if (unlinked.length) console.log(`   스킬이 안내하지 않는 장: ${unlinked.join(', ')}`);
 
-  // ---- GitHub Pages 정적 웹 앱 데이터 및 HTML 검증 ----
-  const docsDataPath = join(ROOT, 'docs', 'data.json');
-  const docsIndexPath = join(ROOT, 'docs', 'index.html');
-  const docsData = JSON.parse(readFileSync(docsDataPath, 'utf8'));
-  check('docs/data.json 정적 데이터 생성 유효', docsData.chapters.en.length === CHAPTERS.length && docsData.chapters.ko.length === CHAPTERS.length && docsData.posts.en.length > 0 && docsData.posts.ko.length > 0);
-  check('docs/index.html 생성 유효', readFileSync(docsIndexPath, 'utf8').includes('app.js'));
+  // ---- 정적 웹 앱 데이터 및 HTML 번들 검증 ----
+  const distDataPath = join(ROOT, 'dist', 'data.json');
+  const distIndexPath = join(ROOT, 'dist', 'index.html');
+  const distData = JSON.parse(readFileSync(distDataPath, 'utf8'));
+  check('dist/data.json 정적 데이터 생성 유효', distData.chapters.en.length === CHAPTERS.length && distData.chapters.ko.length === CHAPTERS.length && distData.posts.en.length > 0 && distData.posts.ko.length > 0);
+  check('dist/index.html 생성 유효', readFileSync(distIndexPath, 'utf8').includes('app.js'));
 
 
 
