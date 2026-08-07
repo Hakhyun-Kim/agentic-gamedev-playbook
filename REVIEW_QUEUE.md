@@ -3,10 +3,11 @@
 주간 회고 에이전트가 **자기 판단으로 처리하지 않고 사람에게 남긴 것**들입니다.
 회고는 근거가 분명한 추가·정정은 곧바로 커밋하고, 아래 성격의 항목만 여기에 적습니다.
 
-> ⚠️ 문서를 고칠 때는 **`skills/agentic-gamedev/references/` 의 해당 장 파일**을 고치고
-> `npm run build` 로 `PLAYBOOK.md`(합본, 생성물)를 재생성하세요. 합본을 직접 고치면
-> `npm test` 가 실패합니다. 장을 신설했다면 `scripts/playbook-source.mjs` 의 `CHAPTERS` 와
-> `SKILL.md` 라우팅 표에도 추가해야 합니다(테스트가 검사합니다).
+> ⚠️ 문서를 고칠 때는 **`references/en/` 과 `references/ko/` 양쪽**의 해당 장 파일을 고치고
+> `npm run build` 로 합본(`PLAYBOOK.md`·`PLAYBOOK.ko.md`)을 재생성하세요. 두 언어는 같은
+> 절 번호 체계를 공유하므로 **한쪽에만 소절을 더하면 `npm test` 가 실패합니다.**
+> 합본을 직접 고쳐도 실패합니다. 장을 신설했다면 `scripts/playbook-source.mjs` 의 `CHAPTERS` 와
+> `SKILL.md` 라우팅 표에도 추가해야 합니다. 자세한 절차는 [`RETRO.md`](RETRO.md)에 있습니다.
 
 | 남기는 기준 | 왜 사람이 정해야 하나 |
 |---|---|

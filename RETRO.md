@@ -21,16 +21,28 @@ API 키는 필요 없다 — 그 기기에 이미 로그인된 Claude Code 인�
 읽기는 공개 API로 충분하다(`gh api`, `git clone --depth`). **게임 저장소는 절대 수정하지 마라.**
 쓰기 권한은 이 플레이북 저장소에만 쓴다.
 
-## ⚠️ 문서를 고치는 방법 (2026-07-27 구조 변경)
+## ⚠️ 문서를 고치는 방법 (2026-08-06 갱신 — 이중 언어)
 
-**`PLAYBOOK.md`를 직접 고치지 마라.** 그것은 생성물이고, 고치면 CI가 실패한다.
+**`PLAYBOOK.md` · `PLAYBOOK.ko.md` 를 직접 고치지 마라.** 둘 다 생성물이고, 고치면 CI가 실패한다.
 
-1. `skills/agentic-gamedev/references/` 의 **해당 장 파일**을 고친다.
-2. `npm run build` 로 `PLAYBOOK.md`를 재생성한다.
+원천은 **언어별로 두 벌**이다:
+
+```
+skills/agentic-gamedev/references/en/<장>.md   → PLAYBOOK.md
+skills/agentic-gamedev/references/ko/<장>.md   → PLAYBOOK.ko.md
+```
+
+1. **해당 장 파일을 `en`과 `ko` 양쪽에 고친다.** 한쪽만 고치는 것은 완료가 아니다.
+   - 두 언어는 **같은 절 번호 체계**를 공유한다(en 5.6 = ko 5.6). 새 소절을 만들면
+     **양쪽에 같은 번호로** 넣어라. 어긋나면 `npm test`의 `en ↔ ko 절 번호 일치`가 잡는다.
+   - 번역이 아니라 **각 언어로 다시 쓰는 것**이다. 근거 수치·커밋 sha·파일명은 양쪽 동일하게,
+     문장은 그 언어에서 자연스럽게. 한쪽에만 있는 예시나 캐빗을 남기지 마라.
+   - 어느 쪽 언어로 먼저 쓰든 상관없다. 두 벌이 같은 골격을 갖는 것만 지켜라.
+2. `npm run build` 로 `PLAYBOOK.md`와 `PLAYBOOK.ko.md`를 재생성한다(한 번에 둘 다 나온다).
 3. 실행용 요약이 달라져야 한다면 `skills/agentic-gamedev/SKILL.md` 의 해당 절에 **한두 줄**만 더한다
    (스킬은 요약이다 — 전문을 옮기지 마라. 상세는 장 파일이 갖는다).
-4. **장을 새로 만들었다면** `scripts/playbook-source.mjs` 의 `CHAPTERS` 배열과 SKILL.md 라우팅 표에도
-   추가한다. 빠뜨리면 테스트가 잡는다.
+4. **장을 새로 만들었다면** `en`·`ko` 양쪽에 파일을 만들고 `scripts/playbook-source.mjs` 의
+   `CHAPTERS` 배열과 SKILL.md 라우팅 표에도 추가한다. 빠뜨리면 테스트가 잡는다.
 5. 버전을 올린다 — `package.json` · `.claude-plugin/plugin.json` · `mcp/server.mjs` 의 `VERSION`
    **세 곳 모두**(어긋나면 테스트가 잡는다). 소절 신설·보강은 MINOR.
 6. `npm test` 가 통과해야 커밋한다. 실패하면 커밋하지 말고 그대로 끝내라.

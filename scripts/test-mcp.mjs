@@ -3,7 +3,7 @@
 import { spawn } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { ROOT, REF_DIR, CHAPTERS, composePlaybook } from './playbook-source.mjs';
+import { ROOT, REF_DIR, CHAPTERS, composePlaybook, readChapter } from './playbook-source.mjs';
 const server = spawn(process.execPath, [join(ROOT, 'mcp', 'server.mjs')], { stdio: ['pipe', 'pipe', 'inherit'] });
 
 const pending = new Map();
@@ -110,6 +110,26 @@ try {
   const unlinked = CHAPTERS.filter((f) => f !== '00-intro.md' && !linked.includes(f));
   check(`모든 장이 SKILL.md에서 도달 가능`, unlinked.length === 0);
   if (unlinked.length) console.log(`   스킬이 안내하지 않는 장: ${unlinked.join(', ')}`);
+
+  // ---- en ↔ ko 골격 대조 ----
+  // 두 언어는 번역본이라 본문은 대조할 수 없지만 **절 번호 체계는 같아야 한다**.
+  // 회고가 한쪽 언어에만 소절을 더하면 여기서 깨진다(2.5 — 합칠 수 없으면 어긋날 때 깨지게).
+  const outline = (file, lang) =>
+    [...readChapter(file, lang).matchAll(/^#{2,3}\s+((?:\d+(?:\.\d+)*|부록\s*[A-Z]|Appendix\s*[A-Z]))/gm)]
+      .map((m) => m[1].replace(/^(?:부록|Appendix)\s*/, 'APPENDIX-'));
+
+  const skew = CHAPTERS.map((f) => {
+    const [en, ko] = [outline(f, 'en'), outline(f, 'ko')];
+    const onlyEn = en.filter((s) => !ko.includes(s));
+    const onlyKo = ko.filter((s) => !en.includes(s));
+    return onlyEn.length || onlyKo.length ? { f, onlyEn, onlyKo } : null;
+  }).filter(Boolean);
+
+  check(`en ↔ ko 절 번호 일치 (${CHAPTERS.length}장)`, skew.length === 0);
+  for (const s of skew) {
+    if (s.onlyEn.length) console.log(`   ${s.f}: en 에만 있음 → ${s.onlyEn.join(', ')}`);
+    if (s.onlyKo.length) console.log(`   ${s.f}: ko 에만 있음 → ${s.onlyKo.join(', ')}`);
+  }
 
   // ---- 정적 웹 앱 데이터 및 HTML 번들 검증 ----
   const distDataPath = join(ROOT, 'dist', 'data.json');
