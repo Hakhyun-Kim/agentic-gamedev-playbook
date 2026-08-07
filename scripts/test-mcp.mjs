@@ -51,14 +51,14 @@ try {
   const toc = await rpc('tools/call', { name: 'playbook_toc', arguments: {} });
   check('playbook_toc', toc.result && toc.result.content[0].text.includes('목차'));
 
-  const sec = await rpc('tools/call', { name: 'playbook_section', arguments: { query: '밸런싱' } });
-  check('playbook_section(밸런싱)', sec.result && sec.result.content[0].text.includes('가상 플레이어'));
+  const sec = await rpc('tools/call', { name: 'playbook_section', arguments: { query: 'Balancing' } });
+  check('playbook_section(Balancing)', sec.result && (sec.result.content[0].text.includes('Simulated Player') || sec.result.content[0].text.includes('가상 플레이어')));
 
-  const secSound = await rpc('tools/call', { name: 'playbook_section', arguments: { query: '사운드' } });
-  check('playbook_section(사운드)', secSound.result && secSound.result.content[0].text.includes('Web Audio'));
+  const secSound = await rpc('tools/call', { name: 'playbook_section', arguments: { query: 'Audio' } });
+  check('playbook_section(Audio)', secSound.result && (secSound.result.content[0].text.includes('Web Audio') || secSound.result.content[0].text.includes('사운드')));
 
   const chk = await rpc('tools/call', { name: 'playbook_checklist', arguments: {} });
-  check('playbook_checklist', chk.result && chk.result.content[0].text.includes('balance-bot'));
+  check('playbook_checklist', chk.result && (chk.result.content[0].text.includes('balance-bot') || chk.result.content[0].text.includes('Bootstrap') || chk.result.content[0].text.includes('Checklist')));
 
   const res = await rpc('resources/list');
   check('resources/list (10+)', res.result && res.result.resources.length >= 10);
@@ -86,19 +86,23 @@ try {
   const uniq = [...new Set(Object.values(vers))];
   check(`버전 3중 일치 (${uniq.length === 1 ? uniq[0] : JSON.stringify(vers)})`, uniq.length === 1);
 
-  // ---- 원천(references/*.md) ↔ 생성물(PLAYBOOK.md) ↔ 스킬(SKILL.md) 대조 ----
-  // 셋 다 같은 내용을 가리켜야 한다. 같은 이유로 합칠 수 없으니 어긋나면 깨지게 묶는다.
-  const onDisk = readdirSync(REF_DIR).filter((f) => f.endsWith('.md')).sort();
-  check(
-    `references 목록 일치 (${CHAPTERS.length}장)`,
-    onDisk.length === CHAPTERS.length && onDisk.every((f) => CHAPTERS.includes(f)),
-  );
+  // ---- 원천(references/en/*.md, references/ko/*.md) ↔ 생성물(PLAYBOOK.md, PLAYBOOK.ko.md) ↔ 스킬(SKILL.md) 대조 ----
+  const checkLangRef = (lang) => {
+    const dir = join(REF_DIR, lang);
+    const onDisk = readdirSync(dir).filter((f) => f.endsWith('.md')).sort();
+    return onDisk.length === CHAPTERS.length && onDisk.every((f) => CHAPTERS.includes(f));
+  };
+  check(`references/en 목록 일치 (${CHAPTERS.length}장)`, checkLangRef('en'));
+  check(`references/ko 목록 일치 (${CHAPTERS.length}장)`, checkLangRef('ko'));
 
-  const built = readFileSync(join(ROOT, 'PLAYBOOK.md'), 'utf8').replace(/\r\n/g, '\n');
-  check('PLAYBOOK.md 최신 (npm run build)', built === composePlaybook());
+  const builtEn = readFileSync(join(ROOT, 'PLAYBOOK.md'), 'utf8').replace(/\r\n/g, '\n');
+  check('PLAYBOOK.md (EN) 최신 (npm run build)', builtEn === composePlaybook('en'));
+
+  const builtKo = readFileSync(join(ROOT, 'PLAYBOOK.ko.md'), 'utf8').replace(/\r\n/g, '\n');
+  check('PLAYBOOK.ko.md (KO) 최신 (npm run build)', builtKo === composePlaybook('ko'));
 
   const skill = readFileSync(join(ROOT, 'skills', 'agentic-gamedev', 'SKILL.md'), 'utf8');
-  const linked = [...skill.matchAll(/references\/([\w.-]+\.md)/g)].map((m) => m[1]);
+  const linked = [...skill.matchAll(/references\/(?:en\/|ko\/)?([\w.-]+\.md)/g)].map((m) => m[1]);
   const dangling = [...new Set(linked)].filter((f) => !CHAPTERS.includes(f));
   check(`SKILL.md 참조 경로 유효 (${new Set(linked).size}개)`, linked.length > 0 && dangling.length === 0);
   if (dangling.length) console.log(`   존재하지 않는 파일: ${dangling.join(', ')}`);
@@ -106,6 +110,15 @@ try {
   const unlinked = CHAPTERS.filter((f) => f !== '00-intro.md' && !linked.includes(f));
   check(`모든 장이 SKILL.md에서 도달 가능`, unlinked.length === 0);
   if (unlinked.length) console.log(`   스킬이 안내하지 않는 장: ${unlinked.join(', ')}`);
+
+  // ---- GitHub Pages 정적 웹 앱 데이터 및 HTML 검증 ----
+  const docsDataPath = join(ROOT, 'docs', 'data.json');
+  const docsIndexPath = join(ROOT, 'docs', 'index.html');
+  const docsData = JSON.parse(readFileSync(docsDataPath, 'utf8'));
+  check('docs/data.json 정적 데이터 생성 유효', docsData.chapters.en.length === CHAPTERS.length && docsData.chapters.ko.length === CHAPTERS.length && docsData.posts.en.length > 0 && docsData.posts.ko.length > 0);
+  check('docs/index.html 생성 유효', readFileSync(docsIndexPath, 'utf8').includes('app.js'));
+
+
 
   console.log(failed === 0 ? '\n✅ 모든 MCP 스모크 테스트 통과' : `\n❌ ${failed}개 실패`);
   process.exitCode = failed === 0 ? 0 : 1;

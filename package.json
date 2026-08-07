@@ -8,7 +8,9 @@
   },
   "scripts": {
     "start": "node mcp/server.mjs",
-    "build": "node scripts/build-playbook.mjs",
+    "build:playbook": "node scripts/build-playbook.mjs",
+    "build:site": "node scripts/build-site.mjs",
+    "build": "node scripts/build-playbook.mjs && node scripts/build-site.mjs",
     "test": "node scripts/test-mcp.mjs",
     "retro": "node scripts/retro.mjs"
   },

@@ -3,8 +3,9 @@
 **AI가 만들고, AI가 검증하는 게임 개발 방법론** — 문서 + Claude Code 스킬 + MCP 서버.
 
 > *An agentic AI methodology for building games: the AI designs, implements, balance-tests
-> (by playing hundreds of simulated runs itself), verifies and ships. Docs in Korean;
-> the method is language-agnostic. Zero external assets — all graphics/audio are code.*
+> (by playing hundreds of simulated runs itself), verifies and ships. Primary docs in English
+> ([PLAYBOOK.md](PLAYBOOK.md)); secondary docs in Korean ([PLAYBOOK.ko.md](PLAYBOOK.ko.md)).
+> Zero external assets — all graphics/audio are code.*
 
 한 줄 요약: **복잡성을 에셋이 아니라 코드에 두면, AI가 기획→구현→밸런싱→검증→배포 전 과정을 자율적으로 돌릴 수 있다.**
 
@@ -21,7 +22,7 @@
 그리고 그 검증은 **출시 후에도 멈추지 않습니다** — 같은 봇을 스케줄에 걸어, 밤마다 밸런스 회귀를 잡고
 매일 아침 새 트렌드를 조사해 다음 할 일을 제안하게 만드는 방법이 [11장](PLAYBOOK.md#11-상시-자동화--사람이-자는-동안-도는-루프)에 있습니다.
 
-## 핵심 내용 ([PLAYBOOK.md](PLAYBOOK.md))
+## 핵심 내용 ([PLAYBOOK.md](PLAYBOOK.md) / [한국어 PLAYBOOK.ko.md](PLAYBOOK.ko.md))
 
 | 장 | 내용 |
 |----|------|
@@ -37,22 +38,27 @@
 | 부트스트랩 체크리스트 | 새 게임 시작 시 복사해 쓰는 20항목 |
 
 > 이 문서는 **스스로 갱신됩니다.** 주간 회고 에이전트가 게임 저장소들의 변화를 읽어 근거가 분명한
-> 교훈은 해당 장(`references/`)에 직접 커밋하고, 사람의 판단이 필요한 것만
+> 교훈은 해당 장(`references/en/`, `references/ko/`)에 직접 커밋하고, 사람의 판단이 필요한 것만
 > [REVIEW_QUEUE.md](REVIEW_QUEUE.md)에 남깁니다.
 
-## 저장소 구조 — 원천은 장별 파일 하나뿐
+## 저장소 구조 — 원천은 장별 파일
 
 ```
 skills/agentic-gamedev/
   SKILL.md          ← 실행용 요약 + 라우팅 ("밸런스 작업이면 03을 열어라")
-  references/       ← ★ 단일 진실 원천 (장별 15개 파일)
-PLAYBOOK.md         ← references를 이어 붙인 합본 (생성물, 사람이 읽는 용도)
-mcp/server.mjs      ← 같은 references를 합쳐 도구/리소스로 서빙
+  references/
+    en/             ← ★ 단일 진실 원천 (영문 메인 15개 장)
+    ko/             ← ★ 단일 진실 원천 (한국어 서브 15개 장 — AI 말투 교정 적용)
+PLAYBOOK.md         ← references/en/ 합본 (영문 메인 생성물)
+PLAYBOOK.ko.md      ← references/ko/ 합본 (한국어 서브 생성물)
+mcp/server.mjs      ← references/en/ 및 references/ko/를 합쳐 도구/리소스로 서빙
+.claude/writing-style.md ← D:\metah-blog 스타일 지침 기반 글쓰기 가이드
 ```
 
-문서를 고칠 때는 **`references/` 의 해당 장만** 고치고 `npm run build` 로 합본을 재생성합니다.
+문서를 고칠 때는 **`references/en/` 또는 `references/ko/` 의 해당 장만** 고치고 `npm run build` 로 합본을 재생성합니다.
 셋이 어긋나면 `npm test` 가 실패합니다 — 플레이북 2.5(합칠 수 없으면 어긋날 때 깨지게 묶어라)를
 이 저장소 자신에게 적용한 것입니다.
+
 
 덕분에 **스킬은 MCP 서버 없이도 완결**됩니다. 필요한 장만 `Read` 로 펼치므로 컨텍스트도 아낍니다.
 

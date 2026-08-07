@@ -19,7 +19,7 @@ const VERSION = '1.37.0';
  * 원천은 skills/agentic-gamedev/references/*.md (장별 파일)이다.
  * 스킬은 필요한 장만 읽고, 이 서버는 같은 파일들을 합쳐 서빙한다 —
  * 두 배포 형태가 구조적으로 같은 내용을 본다. PLAYBOOK.md는 그 합본의 생성물. */
-const PLAYBOOK = composePlaybook();
+const PLAYBOOK = composePlaybook('en');
 
 function parseSections(md) {
   const lines = md.split(/\r?\n/);
@@ -98,7 +98,7 @@ function callTool(name, args) {
       return s.text;
     }
     case 'playbook_checklist':
-      return sectionByKeyword('부트스트랩 체크리스트');
+      return sectionByKeyword('Bootstrap') || sectionByKeyword('Checklist') || sectionByKeyword('부트스트랩 체크리스트');
     case 'playbook_full':
       return PLAYBOOK;
     default:

@@ -12,6 +12,7 @@ import { dirname, join } from 'node:path';
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const REF_DIR = join(ROOT, 'skills', 'agentic-gamedev', 'references');
+export const getRefDir = (lang = 'en') => join(REF_DIR, lang);
 
 /* 문서 순서 = 이 배열 순서. 파일을 추가하면 여기에도 넣어야 한다(누락 시 테스트가 잡는다). */
 export const CHAPTERS = [
@@ -34,9 +35,10 @@ export const CHAPTERS = [
 
 /* 줄바꿈은 항상 LF로 정규화한다 — Windows에서 클론하면 CRLF로 체크아웃돼
  * 합본 비교가 내용과 무관하게 어긋난다. */
-export const readChapter = (file) => readFileSync(join(REF_DIR, file), 'utf8').replace(/\r\n/g, '\n');
+export const readChapter = (file, lang = 'en') => readFileSync(join(getRefDir(lang), file), 'utf8').replace(/\r\n/g, '\n');
 
-/** 장별 파일 → PLAYBOOK.md 본문 (구분선으로 이어 붙인다) */
-export function composePlaybook() {
-  return CHAPTERS.map((f) => readChapter(f).trim()).join('\n\n---\n\n') + '\n';
+/** 장별 파일 → PLAYBOOK.md (또는 PLAYBOOK.ko.md) 본문 (구분선으로 이어 붙인다) */
+export function composePlaybook(lang = 'en') {
+  return CHAPTERS.map((f) => readChapter(f, lang).trim()).join('\n\n---\n\n') + '\n';
 }
+

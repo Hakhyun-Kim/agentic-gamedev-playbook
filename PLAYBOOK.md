@@ -1,93 +1,81 @@
-# Agentic GameDev Playbook — AI가 만들고 AI가 검증하는 게임 개발 방법론
+# Agentic GameDev Playbook — AI-Driven Game Development & Automated Verification
 
-> 서로 다른 장르·프레임워크의 게임 네 개에서 반복 검증된 "AI 페어 게임 개발" 방식을
-> 일반화한 문서입니다. 새 게임을 시작할 때 이 문서를 그대로 출발점으로 삼으세요.
+> A pragmatic methodology for building games with agentic AI, battle-tested across 4 games of different genres and tech stacks. Use this playbook as your default starting point for new game projects.
 
-## 검증된 프로젝트
+## Proven Projects
 
-| 프로젝트 | 장르 | 스택 | 저장소 |
-|----------|------|------|--------|
-| **백층 던전** (dungeon100) | 3D 로그라이크 던전 크롤러 | React + Three.js + TypeScript + Vite | [dungeon100](https://github.com/Hakhyun-Kim/dungeon100) |
-| **용사 수학 디펜스** (defenehero) | 3D 타워 디펜스 (교육) | Vanilla JS + Three.js + esbuild | [defenehero](https://github.com/Hakhyun-Kim/defenehero) |
-| **두 문 러너** (door-runner) | 2D 러너 | Vanilla JS + Canvas | [door-runner](https://github.com/Hakhyun-Kim/door-runner) |
-| **기와장터** (giwa-village) | 3D 멀티플레이 소셜 (온체인) | React Three Fiber + viem + Solidity | [giwa-village](https://github.com/Hakhyun-Kim/giwa-village) |
+| Project | Genre | Tech Stack | Repository |
+|---------|-------|------------|------------|
+| **Dungeon 100** (`dungeon100`) | 3D Roguelike Dungeon Crawler | React + Three.js + TypeScript + Vite | [dungeon100](https://github.com/Hakhyun-Kim/dungeon100) |
+| **Math Defense Hero** (`defenehero`) | 3D Educational Tower Defense | Vanilla JS + Three.js + esbuild | [defenehero](https://github.com/Hakhyun-Kim/defenehero) |
+| **Door Runner** (`door-runner`) | 2D Runner | Vanilla JS + Canvas | [door-runner](https://github.com/Hakhyun-Kim/door-runner) |
+| **Giwa Village** (`giwa-village`) | 3D Multiplayer Social (On-chain) | React Three Fiber + viem + Solidity | [giwa-village](https://github.com/Hakhyun-Kim/giwa-village) |
 
-**장르도 프레임워크도 다르지만 아래 방법론은 넷 모두에 동일하게 적용됐습니다.**
-이 문서의 목적은 이 방법론이 특정 게임의 우연이 아니라 재사용 가능한 틀임을 보이고,
-다음 게임에 복사해 쓸 수 있게 만드는 것입니다.
+While genres and frameworks differed, the core methodology remained identical across all four projects. This proves the approach is a reusable template rather than a one-off stroke of luck.
 
-> 네 번째(기와장터)는 앞의 셋과 **모양이 다릅니다** — 싱글플레이 런이 없어 "사망 분포"를
-> 뽑을 대상이 없고, 규칙의 일부가 다른 언어(Solidity)로 다른 런타임에서 돕니다.
-> 그래서 3장의 밸런스 봇이 그대로 통하지 않았고, 그 빈자리를 메우려다 나온 것이
-> **2.5 · 3.7 · 3.8**입니다. 방법론이 안 맞는 프로젝트를 만나면 버리기 전에
-> **무엇이 그 자리를 대신하는지** 먼저 찾으세요 — 대개 더 값싼 대체물이 있습니다.
+The fourth project (`giwa-village`) had a distinct structure compared to the first three — it lacked single-player runs, making traditional death-distribution tracking impossible. Furthermore, part of the core logic ran in Solidity smart contracts.
+
+Rather than abandoning the methodology when facing a non-standard project, we derived alternative verification techniques: **2.5** (Source Cross-Checking), **3.7** (Decision-Point Expectation), and **3.8** (Clock Injection). When a standard loop doesn't fit, find what lighter mechanism can replace it instead of giving up on automated verification.
 
 ---
 
-## 0. 한 줄 요약
+## 0. Executive Summary
 
-> **복잡성을 에셋이 아니라 코드에 두면, AI가 기획·구현·밸런싱·검증·배포 전 과정을 자율적으로 돌릴 수 있다.**
+> **Place complexity in code rather than external assets, enabling AI agents to design, implement, balance, verify, and ship autonomously.**
 
-이미지·오디오 파일을 외주/생성으로 채우는 대신 **그래픽은 절차 생성 지오메트리, 사운드는 Web Audio 합성 코드**로 만들면, 산출물이 전부 "AI가 읽고 고치고 검증할 수 있는 텍스트(코드)"가 됩니다. 그 결과 사람은 *재미의 방향*만 정하고, 나머지는 AI가 스스로 만들고 스스로 플레이해 검증합니다.
+Instead of relying on heavy asset pipelines or generated bitmap images, graphics are created via **procedural geometry** and audio via **Web Audio synthesis code**. This converts all project artifacts into plain text (code) that AI agents can inspect, edit, and test directly. Developers set the direction for gameplay and fun, while AI executes the implementation and playtests.
 
-그리고 그 검증은 **출시 후에도 멈추지 않습니다.** 같은 봇을 스케줄에 걸면 밤마다 밸런스 회귀를 잡고, 아침마다 새 트렌드를 조사해 다음 할 일을 제안합니다 (→ [11. 상시 자동화](#11-상시-자동화--사람이-자는-동안-도는-루프)).
-
----
-
-## 1. 무엇을 만들지 고르는 기준 — 3-Gate
-
-새 게임 또는 새 기능을 채택하기 전에 세 관문을 통과시킵니다. 통과하지 못하면 매력적이어도 보류합니다.
-
-| 관문 | 질문 | 통과 예 | 탈락 예 |
-|------|------|---------|---------|
-| **① 절차성** | 외부 에셋 없이 코드(시드 RNG·수학·캔버스·Web Audio)로 만들 수 있는가? | 절차 생성 맵, 합성 효과음 | 손그림 스프라이트 시트가 필수인 연출 |
-| **② 재미** | 코어 루프에 *결정(선택)* 을 더하는가, 아니면 장식인가? | 조합할지 강화할지 고르는 순간 | 화면 구석의 정적 배경 |
-| **③ 검증가능** | 순수 로직으로 표현돼 봇이 자동 측정할 수 있는가? | 웨이브 생존율, 사망 층 분포 | "감성" 처럼 수치화 불가한 것 |
-
-- 백층 던전은 이 기준으로 **절차 생성 로그라이크**를 장르로 골랐습니다("복잡성이 에셋이 아니라 코드에 있는 게임").
-- 용사 수학 디펜스는 이 기준으로 **진화(전설 특수능력) 시스템**을 채택했습니다(숫자만 키우는 강화 → 행동을 바꾸는 잭팟).
-
-### 1.1 ②(재미) 관문은 한 번 통과로 끝나지 않는다 — 다른 축이 대신 정하기 시작하면 재검사하라
-
-"고르게 하는 것"이 처음엔 결정이었다가, 그 축을 다루는 다른 시스템(생성기 하한선, 적응형
-보정 등)이 나중에 붙으면 **같은 선택지가 조용히 장식으로 바뀔 수 있습니다.** 3-Gate ②는
-기능을 채택할 때 한 번만 묻는 질문이 아니라, 그 기능 곁에 새 시스템이 생길 때마다 다시
-물어야 합니다 — "이 선택이 아직도 뭔가를 정하는가?"
-
-신호는 반복입니다. 플레이어가 같은 메뉴를 판마다 여러 번 넘긴다면, 그 화면은 결정이 아니라
-통과 의례입니다. 처방은 선택을 없애고 **결과만 보여주는 블라인드 랜덤으로 되돌리는 것**입니다
-— 무엇이 나왔고 무엇을 비껴갔는지는 보여주되(그래야 "뽑기"로 느껴집니다), 고르는 단계
-자체를 지우면 결정 비용이 0이 되고 긴장만 남습니다.
-
-> 실측(용사 수학 디펜스, 2026-08-03): 수학 관문마다 난이도 카드 3장 중 하나를 고르게
-> 했는데, 그 난이도 편차는 이미 생성기의 유형 하한선과 적응형 보정(최근 8문제 정답률로
-> 한 칸씩 오르내림)이 다루고 있어 카드의 "자기 보정" 역할이 남는 짐이 됐습니다. 조합이
-> 연쇄로 이어지는 게임 특성상 "한 판에 열댓 번 같은 메뉴를 넘기는" 것으로 드러났고, 카드를
-> 룰렛(스핀 후 1.2~1.6초 안에 자동으로 하나에 멈춤)으로 바꿔 선택 단계를 지우자 결정 비용
-> 없이 긴장만 남았습니다. 밸런스 봇도 같은 룰렛을 시드 난수로 굴려 규칙이 두 벌로 갈라지지
-> 않게 했습니다.
+This verification loop continues post-launch. By running balance simulation bots on nightly schedules, you automatically catch balance regressions and gather daily market trend scouts (→ [11. Automation](#11-automation--background-loops)).
 
 ---
 
-## 2. 아키텍처 4대 규약 (부트스트랩 시 그대로 복사)
+## 1. Feature Selection Standard — The 3-Gate Rule
 
-다음 게임을 시작할 때 이 4가지를 **첫 커밋부터** 지키면 이후 모든 자동화가 공짜로 따라옵니다.
+Before adopting a new game concept or feature, pass it through three mandatory gates. If it fails any gate, defer it regardless of how appealing it seems.
 
-### 2.1 순수 로직과 렌더링 분리 ★ 가장 중요
-게임 규칙(전투·경제·웨이브)을 **DOM/렌더러를 모르는 순수 함수**로 작성합니다. 렌더러와 사운드는 이 로직이 뱉는 이벤트를 소비할 뿐입니다.
+| Gate | Key Question | Pass Example | Fail Example |
+|------|--------------|--------------|--------------|
+| **① Procedural** | Can it be generated in code (seeded RNG, math, Canvas, Web Audio) without external assets? | Procedural dungeons, synthesized SFX | Hand-drawn frame-by-frame sprite animations |
+| **② Fun (Decisions)** | Does it add meaningful *decisions (choices)* to the core loop, or is it decorative? | Choosing between synergy build or stat upgrade | Static background scenery in the UI corner |
+| **③ Verifiable** | Is it decoupled as pure logic so automated bots can measure metrics? | Wave survival rate, death depth distribution | Subjective elements like "vibe" or "feeling" |
+
+- **Dungeon 100** used this rule to select a procedural roguelike genre ("a game where complexity resides in code, not art assets").
+- **Math Defense Hero** used this rule to choose legendary evolution traits over linear numeric upgrades (switching from stat inflation to action-changing jackpots).
+
+### 1.1 Gate ② (Fun) requires continuous re-validation — Re-check when adjacent systems evolve
+
+A choice that starts as a meaningful decision can silently degrade into a tedious chore when adjacent systems (like adaptive balancing or lower-bound generators) are introduced. Gate ② is not a one-time check; ask *"Does this choice still affect outcomes?"* whenever surrounding logic changes.
+
+The primary warning signal is repetition. If players pass through the same selection screen dozens of times per run without thought, that UI has ceased to be a decision and became a ritual. The fix is to remove the choice and convert it to a **blind randomized outcome**—show what was awarded and what was missed to retain tension, but remove the manual click to reduce decision fatigue to zero.
+
+> **Production Example (Math Defense Hero, 2026-08-03):**
+> Initially, players selected one of 3 difficulty cards before every math gate. However, an adaptive balancing system (scaling based on recent answer accuracy) was already adjusting difficulty dynamically, rendering manual card selection redundant. Players were clicking through the same menu 15+ times per session.
+>
+> We replaced manual selection with an automated roulette animation (spinning and stopping within 1.2–1.6s). Removing the manual pick eliminated UI fatigue while preserving the excitement of random draws. The automated balance bot used the exact same seeded RNG roulette, ensuring test logic remained fully synchronized with player logic.
+
+---
+
+## 2. Core Architecture Rules (Mandatory Checklist)
+
+Enforce these 4 rules from **commit zero** when starting a new game project. Adhering to these rules unlocks automated balancing, deterministic testing, and continuous verification out of the box.
+
+### 2.1 Decouple Pure Logic from Rendering ★ (Most Critical)
+
+Write all core gameplay rules (combat, economy, wave scaling) as **pure functions completely unaware of the DOM or 3D renderer**. The renderer and audio engine merely consume event arrays emitted by the core engine.
 
 ```
-data.(js|ts)     — 모든 밸런스 수치 (튜닝은 여기서만)
-engine.(js|ts)   — 순수 로직: tick(state, dt) → events[]   ← 봇과 게임 본체가 공유
-render.(js|ts)   — 3D/2D 렌더러: state를 그리고 events를 이펙트로
-sfx / music      — events를 소리로
-main / app       — 위를 배선하는 컨트롤러
+data.(js|ts)     — All numeric balance values (tune numbers exclusively here)
+engine.(js|ts)   — Pure logic: tick(state, dt) → events[] (shared by bot & live game)
+render.(js|ts)   — Renderer: draws state and translates events to visual effects
+sfx / music      — Audio engine: turns events into sound
+main / app       — Main controller wiring components together
 ```
 
-> 이 한 줄의 결정 덕분에 **밸런스 봇이 존재할 수 있습니다.** 봇은 `render`를 빼고 `engine`만 초고속으로 돌립니다.
+This separation enables **headless balance bots**. Bots bypass the `render` layer entirely and execute `engine` ticks at maximum speed in Node/CLI environments.
 
-### 2.2 시드 결정론
-모든 난수를 시드 기반 RNG(`mulberry32` 11줄이면 충분)로 통일합니다. "같은 시드 = 같은 전개"가 보장되면 버그 재현과 밸런스 회귀 검증이 가능해집니다.
+### 2.2 Seeded Determinism
+
+Unify all pseudo-random number generation around a single seeded RNG function (an 11-line `mulberry32` implementation is sufficient). Guaranteeing *"Same Seed = Identical Playthrough"* makes bug reproduction and balance regression testing effortless.
 
 ```js
 function mulberry32(seed) {
@@ -100,2031 +88,553 @@ function mulberry32(seed) {
 }
 ```
 
-엔진은 `createGame({ rng })`처럼 RNG를 주입받고, 게임 본체는 `Math.random`, 봇은 `mulberry32(seed)`를 넘깁니다.
+Inject RNG functions into the engine via `createGame({ rng })`. The live web app passes `Math.random`, while automated test bots inject `mulberry32(seed)`.
 
-**생성기를 나중에 갈아 끼울 때의 함정** (기존 절차 생성 맵에 새 지형 종류를 추가하며 실측으로 확인):
+**Pitfalls when modifying procedural generators:**
 
-1. **분기 판정을 메인 스트림에서 뽑지 말 것.** "이 판은 새 지형인가?"를 게임의 `rand()`로 한 번이라도
-   뽑으면 그 뒤 모든 난수가 한 칸씩 밀려 **분기되지 않은 판까지 전부 다른 맵**이 됩니다. 판정은 시드에서
-   파생한 **별도 스트림**으로 돌리세요. (검증법: 변경 전후로 전 판의 지형 해시 + 배치 좌표를 비교 —
-   실제로 180개 맵 100% 일치를 확인하고서야 커밋했습니다)
-2. **새 배치물의 난수 호출은 언제나 기존 배치 뒤에.** 중간에 끼우면 1번과 같은 밀림이 생깁니다.
-3. **공용 배치 코드의 암묵적 가정을 새 지형이 지키게.** 상자·적 스폰이 "방 내부는 전부 바닥"을
-   가정한다면, 새 지형에서도 *완전히 열린 사각형*만 방으로 잡으면 배치 로직을 한 줄도 안 고쳐도 됩니다.
-   지형만 바꾸고 나머지를 그대로 두는 것이 회귀 위험을 가장 크게 줄입니다.
-4. **연결성의 정의를 길찾기와 일치시킬 것.** BFS가 4-연결이면 지형의 최대 연결 영역도 4-연결로
-   골라야 합니다. 대각선으로만 이어진 통로는 그리드상 '길'로 보이지만 실제로는 못 지나가고,
-   그 판에서 봇이 영원히 갇힙니다.
-5. **면적이 바뀌면 밀도를 보정할 것.** 새 지형이 1.65배 넓다면 같은 수의 적이 흩어져 난이도가
-   조용히 내려갑니다. '면적당 위협'을 맞춰야 밸런스 봇의 이전/이후 비교가 의미를 갖습니다.
+1. **Never draw branch decisions from the primary RNG stream:** Drawing a condition (e.g., *"Is this a special dungeon branch?"*) from the main `rand()` shifts all subsequent random numbers by one position, altering layout seeds across unbranched levels. Derive branch decisions from a separate seeded sub-stream.
+2. **Append new random calls after existing generator calls:** Inserting a random call in the middle of a generation sequence causes stream offsets identical to pitfall #1.
+3. **Preserve generator spatial contracts:** If unit spawner logic assumes *"room interiors consist exclusively of floor tiles"*, ensure new procedural layouts strictly preserve rectangular floor bounds so entity placement logic remains unmodified.
+4. **Align connectivity rules with pathfinding:** If BFS pathfinding operates on 4-way cardinal grid directions, level connectivity checks must enforce 4-way cardinal adjacency. Diagonal-only passages appear open visually but block cardinal movement, trapping automated bots infinitely.
+5. **Normalize enemy density when map area changes:** Expanding level area by 1.65x spreads out enemies and artificially lowers difficulty. Keep threat-per-unit-area constant to ensure balance tests remain meaningful.
 
-> 이 다섯 가지는 **생성기 전용 자동 검사**로 굳히는 게 가장 확실합니다. 브라우저 없이 순수 함수만
-> 불러 수백 개 맵의 도달 가능성·벽 속 배치·고립 영역·면적당 밀도를 1초 안에 검사하는 스크립트를
-> 만들어 두면(예: `npm run floor-check`), 지형을 건드릴 때마다 커밋 전에 사고를 막을 수 있습니다.
+> **Automated Map Verification CLI:**
+> Create a headless CLI script (`npm run floor-check`) that invokes procedural map generators across hundreds of seeds in under 1 second. Verify reachability, trapped tiles, and spatial density automatically before committing layout changes.
 
-### 2.2.1 파생 효과 — 결정론은 플레이어에게도 신뢰를 준다 (온체인·확률형 게임)
+### 2.2.1 Determinism in On-Chain & Probabilistic Games
 
-2.2의 원래 목적은 봇 검증이었지만, 같은 성질이 **플레이어를 향해서도** 그대로 씁니다:
-같은 시드 + 같은 선택이면 누구나 같은 결과를 재현할 수 있으니, "확률표를 공개한다"가
-아니라 **"결과를 직접 재현하게 한다"**로 신뢰를 줄 수 있습니다. 확률 조작 의혹이 반복되는
-이유는 대개 숫자를 안 밝혀서가 아니라 **검증할 방법이 없어서**입니다.
+While determinism primarily serves bot verification, it also builds player trust. Rather than simply publishing drop-rate tables, provide tools allowing players to **re-run seeds and choices to verify outcomes independently**.
 
 ```js
-// 온체인 트랜잭션의 입력(선택)과 주차 시드(블록해시)만으로
-// 게임 서버·API 키 없이 결과를 재현해 온체인 이벤트와 대조
+// Replay run via seed & player choices without requiring a backend server
 const replayed = resolveRun(seed, choices);
 assert(replayed.floor === onchainEvent.floor);
 ```
 
-> 실측(기와장터): 던전 판정을 `core/` 순수 함수 한 벌로 모으자 `scripts/verify-run.mjs`가
-> 실체인 3건 전부를 바이트 단위로 재현했습니다. 인게임에도 귀환 직후 "🔒 이 결과
-> 검증하기" 버튼을 붙여 확정 층수를 시드로부터 다시 계산해 온체인 값과 맞춰 보여줍니다.
-> **한계도 함께 적으세요**: 검증 가능성과 예측 불가능성은 같은 축의 양 끝이라, 엔트로피에
-> 실시간 값(`block.timestamp`)이 섞이는 요소(예: 보스 전투)는 아카이브 노드 없이 재현할
-> 수 없어 검증 범위에서 뺐습니다. 무엇을 검증했고 무엇을 못 했는지를 문서에 같이 적는
-> 것 자체가 신뢰의 일부입니다.
+> **Giwa Village Production Note:**
+> Consolidating dungeon resolution into pure functions allowed `scripts/verify-run.mjs` to reproduce contract execution down to the exact byte. An in-game *"🔒 Verify Outcome"* button recalculated completed floor state from seeds to match on-chain logs. *(Note: Unpredictable real-time values like `block.timestamp` in boss fights were explicitly documented as outside verification scope.)*
 
-### 2.3 밸런스 단일 파일
-모든 수치(비용·체력·스케일링 공식·확률)를 `data` 한 파일에 모읍니다. 튜닝이 한 곳에서 일어나고, 봇과 게임이 **같은 파일**을 읽으므로 "봇은 통과했는데 실게임은 다름"이 원천 차단됩니다.
+### 2.3 Single-File Balance Config
 
-### 2.4 이벤트 방출
-`tick()`은 상태를 바꾸고 **무슨 일이 일어났는지 이벤트 배열**을 반환합니다. 렌더러/사운드는 이벤트를 보고 파티클·데미지 숫자·효과음을 재생합니다.
+Consolidate all game balance numbers (costs, health scaling, drop rates, exponential multipliers) into a single `data` config module. Modifying numbers in one central file prevents desynchronization between bot simulations and live client builds.
+
+### 2.4 Event-Driven Engine Output
+
+The `tick(state, dt)` engine mutates state and returns a read-only array of frame events. Renderers and sound engines consume this array to trigger particle effects, floating damage text, and SFX.
 
 ```js
 const events = tick(state, dt);   // [{type:'kill', x, y, gold}, {type:'castleHit', dmg}, ...]
-renderer.onEvents(state, events); // 시각 효과
-handleEvents(events);             // 사운드/토스트
+renderer.onEvents(state, events); // Visual effects
+handleEvents(events);             // Audio & toast UI
 ```
 
-이 구조면 봇은 이벤트를 그냥 무시하고, 게임은 이벤트를 화려하게 소비합니다 — **한 엔진, 두 소비자.**
+Under this architecture, headless bots ignore event arrays while web clients consume them for juice—**one engine, two consumers.**
 
-### 2.5 같은 수치가 두 언어에 살 때 — 합칠 수 없으면 "어긋나면 깨지게" 묶어라
+### 2.5 Cross-Language Value Verification
 
-2.3의 단일 파일 원칙은 **한 런타임 안에서만** 지킬 수 있습니다. 규칙의 일부가 서버에,
-또는 다른 언어(Solidity·C#·셰이더)에 있으면 같은 확률표가 두세 벌 존재하게 되고,
-파일을 합칠 방법이 없습니다. 이때 포기하지 말고 **어긋나면 테스트가 깨지게** 묶으세요.
-
-가장 값싼 방법은 **소스를 파싱해 대조하는 것**입니다. 실행할 필요도, 그 언어의
-런타임을 띄울 필요도 없습니다:
+When rules span multiple runtimes (e.g., TypeScript client + Solidity smart contracts or C# server), maintaining a single balance file is impossible. Enforce consistency by writing automated static AST/regex parsers that fail test suites if values diverge across repositories.
 
 ```js
-// 문 판정 함수 본문에서 `< 숫자)` 경계 둘을 뽑아 세 구현을 맞춰 본다
+// Parse threshold bounds across Solidity, TS Server, and TS Client
 const table = {
-  컨트랙트: doorThresholds('contracts/Guilds.sol',    'function doorRoll'),
-  서버:     doorThresholds('server/src/guilds.ts',    'doorOutcome('),
-  클라:     doorThresholds('client/src/chain/guilds.ts', 'function doorRollLocal'),
+  contract: doorThresholds('contracts/Guilds.sol', 'function doorRoll'),
+  server:   doorThresholds('server/src/guilds.ts', 'doorOutcome('),
+  client:   doorThresholds('client/src/chain/guilds.ts', 'function doorRollLocal'),
 };
-// → safe<154 · bonus<192 · trap≥192 (of 256) — 셋이 다르면 실패
+// Test fails if values diverge across implementations
 ```
 
-같은 기법이 **TS를 Node 테스트에서 못 불러올 때**도 통합니다. 조명 키프레임 표나
-튜닝 상수처럼 "값의 불변식"만 보면 되는 것은 정규식으로 뽑아 검사하는 편이,
-빌드 파이프라인을 테스트에 끌어들이는 것보다 훨씬 쌉니다.
+### 2.6 Robust State Persistence (localStorage)
 
-> 놓치면 무엇이 일어나는가: 봇도 서버도 통과하는데 **진짜 판정을 하는 쪽에서만** 다르게
-> 나옵니다. 화면은 "장날!"이라고 띄우는데 실제 보상은 2배가 아닌 식으로요. 재현이
-> 안 되니 가장 잡기 어려운 종류의 버그입니다.
+When implementing autosave:
+1. **Save only at safe static checkpoints:** Capture state snapshots during preparation phases between waves, never during active combat loops where complex object graphs risk serialization bugs.
+2. **Immediate serialization with deferred idle writes:** Serialize state synchronously upon state change, but defer disk/localStorage I/O using `requestIdleCallback`. Always register `pagehide` and `visibilitychange` listeners to flush pending writes instantly when tabs close.
+3. **Treat save files as untrusted user input:** Clamp out-of-bound stats, drop invalid IDs, and relocate overlapping inventory items to bench slots during deserialization to prevent game crashes.
+4. **Test invalid payloads:** Include automated test cases feeding malformed/hand-edited JSON files to ensure the parser recovers gracefully without throwing runtime exceptions.
 
-### 2.6 세션 저장 — 안전한 지점에서만 스냅샷, 쓰기는 유휴 시간에, 불러오기는 파일을 의심하라
+### 2.7 Procedural Content Requirements Reporting
 
-`localStorage` 자동 저장을 넣을 때 세 가지가 한꺼번에 걸립니다: *언제* 찍을지,
-*언제* 쓸지, *무엇을* 믿을지. 셋을 따로 풀면 저장/이어하기가 버그 없이 붙습니다.
-
-1. **저장 시점 = 시뮬레이션이 멈춰 있는 안전한 지점만.** 전투 중 몬스터·투사체처럼
-   서로를 참조하는 객체 그래프는 직렬화가 잘 깨지고, 설령 되더라도 "반쯤 이긴
-   전투를 저장해 두고 다시 불러 골드만 불리는" 꼼수가 생깁니다. 웨이브/전투가
-   끝난 **준비 단계**에서만 스냅샷을 찍고, 진행 중인 시뮬레이션 자체는 담지
-   않습니다 — 불러오면 그 지점의 준비 단계에서 다시 시작합니다.
-2. **직렬화는 그 순간 즉시, 쓰기는 유휴 시간으로 미루되 두 개의 안전망을 걸어라.**
-   `requestIdleCallback`은 **숨은 탭에서 무기한 미뤄질 수 있으므로** 반드시
-   `timeout`을 주고, 탭이 닫히거나 가려지는 순간(`pagehide`,
-   `visibilitychange`→`hidden`)엔 그 자리에서 즉시 flush합니다. "곧 쓸게"가
-   유실이 되면 안 됩니다.
-   ```js
-   const idle = window.requestIdleCallback
-     ? (fn) => window.requestIdleCallback(fn, { timeout: 400 })
-     : (fn) => setTimeout(fn, 60);
-   function autosave(state) { pending = serialize(state); idle(flush); }  // 직렬화는 즉시
-   window.addEventListener('pagehide', flush);
-   document.addEventListener('visibilitychange', () => {
-     if (document.visibilityState === 'hidden') flush();
-   });
-   ```
-3. **불러오기는 파일을 사용자가 고칠 수 있는 입력으로 취급하라.** 손으로 편집했거나
-   손상된 저장 파일이 게임을 깨뜨리면 안 됩니다 — 수치는 안전한 범위로 clamp,
-   모르는 id는 버리고, 자리가 겹치는 항목은 삭제 대신 **인벤토리/벤치로 대피**시켜
-   최대한 살립니다. 복원 자체가 불가능한 구조(필수 필드 없음)일 때만 `null`.
-   수동 파일 저장(💾 내보내기/📂 불러오기)이 있다면 **자동 저장과 같은
-   `serialize`/`deserialize`를 공유**하세요 — 검증 경로가 하나로 줄고, 수동
-   저장 파일이 자동 저장보다 덜 안전할 이유가 없습니다.
-4. **회귀 검증은 정상 왕복 + "일부러 망가뜨린" 왕복을 같이 넣어라.** 값 하나 저장하고
-   그대로 불러와지는지(정상 경로)뿐 아니라, 자리 겹침·등급 초과·존재하지 않는 id를
-   주입한 파일을 넣고도 **크래시 없이 유효한 상태로 수렴하는지**를 단언하세요.
-   전자만 테스트하면 실제 사고(사람이 텍스트 에디터로 만지작거린 파일)를 놓칩니다.
-
-> 실측(용사 수학 디펜스, 2026-08-03): 웨이브 종료마다 준비 단계를 자동 저장하고,
-> 부팅 시 이어하기/처음부터를 고르게 했습니다. `serialize`/`deserialize`를 자동
-> 저장과 수동 파일 저장이 공유하고, `deserialize`는 겹친 자리의 유닛을 벤치로
-> 대피시키고 등급을 그 직업의 천장으로 clamp합니다. 검증에는 정상 왕복(골드·웨이브·
-> 배치·도감·통계 유지 확인) 외에 자리 겹침·등급 99·존재하지 않는 직업을 섞은
-> "손으로 고친 파일"을 일부러 넣는 테스트를 추가했습니다.
-
-### 2.7 생성된 콘텐츠가 다른 시스템의 실측값에 의존하면, 생성기가 스스로 요구사항을 신고하게 하라
-
-절차 생성 텍스트(퀴즈·전술 문제·대사)가 **자기 안의 난수가 아니라 살아있는 시뮬레이션
-상태**(몬스터 체력, 남은 골드, 플레이어 화력)에서 숫자를 읽어 오면, 그 숫자는 생성기가
-통제할 수 없습니다 — 시뮬레이션이 진행될수록, 또는 다른 시스템(버프·페널티)이 그 값을
-바꿀수록 조용히 범위를 벗어납니다. 두 사고가 실제로 났습니다: ①웨이브가 깊어지자 몬스터
-체력이 다섯 자리가 되어 저학년 관문에 그 학년이 배우지 않은 나눗셈이 그대로 나갔고,
-②"한 마리당 피해"가 힌트에만 적혀 있고 문제 문장에는 빠져, 힌트를 사야만 풀리는 문제가
-나갔습니다(그건 문제가 아니라 함정입니다).
-
-처방은 생성기가 결과물에 **자기 검증용 메타데이터**를 함께 실어 보내는 것입니다 — 값
-자체가 아니라 "이 값을 검증하려면 무엇을 봐야 하는지"를 신고합니다.
+When procedural content generators read live simulation values (e.g., monster HP scaling), declare validation metadata (`needs`, `calc`) alongside the generated output:
 
 ```js
-// 문제 생성기: 정답에 쓴 계산과, 풀이에 필요한 숫자를 스스로 신고한다
 return {
-  text: `오크 ${n}마리를 다 놓치면 성이 입는 피해는?`,
+  text: `If ${n} Orcs reach the castle, how much damage is taken?`,
   answer: hp * n,
-  needs: [hp, n],                 // 이 숫자들이 문장에 그대로 보여야 풀 수 있다
-  calc: { mul: [hp, n] },         // 요구되는 연산 종류 + 피연산자 (학년 한도 검사용)
+  needs: [hp, n],         // Values that must appear explicitly in problem text
+  calc: { mul: [hp, n] }, // Mathematical operations required
 };
-
-// 자동 검사: 생성기 없이도 결과물만 보고 확인
-for (const nv of p.needs) {
-  if (!new RegExp(`(^|\\D)${nv}(\\D|$)`).test(p.text)) fail('필요한 수가 문장에 없다');
-}
-if (!fitsGrade(grade, p.calc)) fail('학년 한도를 넘는 계산이다');   // 넘으면 재추첨, 전부 걸리면 안전한 유형으로 폴백
 ```
 
-- **값이 아니라 "어떤 검사를 통과해야 하는지"를 신고하게 하세요.** 생성기가 매번 다른
-  숫자를 뱉어도, `needs`/`calc` 같은 메타데이터의 *모양*은 고정이라 검사 코드가 생성
-  로직을 몰라도 결과물만 보고 자동으로 걸러낼 수 있습니다.
-- **한도를 넘으면 조용히 재추첨하고, 전부 걸리면 안전한 유형으로 폴백하세요.** 판에서 읽은
-  수는 생성기가 미리 고를 수 없으니 "만들고 나서 재는" 수밖에 없습니다 — 재는 시점에 걸러야
-  합니다.
-- **검사는 기본 상태 하나만이 아니라, 값을 바꾸는 모든 시스템의 조합에서 돌리세요.**
-  깊이(웨이브·층)뿐 아니라 그 값에 영향을 주는 버프/디버프가 켜진 상태도 별도 컨텍스트로
-  검사해야 합니다 — 기본 상태만 검사하면 "버프가 켜졌을 때만 어긋나는" 불일치를 영영 못
-  잡습니다.
+If generated parameters exceed target grade constraints (`fitsGrade`), automatically re-roll seeds, falling back to safe default templates if limits continue to fail.
 
-> 실측(용사 수학 디펜스, 2026-08-04): 학년별 한도 표(3학년 나누는 수 ≤9·나뉘는 수 ≤999·
-> 곱셈 작은 인수 ≤9, 4학년 ≤99·≤99999·≤99, 5학년 ≤999·≤999999·≤999)를 `fitsGrade`
-> 하나로 판정해, 한도를 넘으면 다른 유형을 재추첨하고 전부 걸리면 산술 문제로 폴백합니다
-> (`src/mathgen/tactical.js`). 검사(`scripts/math-check.mjs`)는 웨이브 12·18·25·32에서
-> 학년 한도를, 그리고 **신화 용사 0명·2명 두 컨텍스트** 모두에서 `needs`의 각 숫자가
-> 문제 문장에 실제로 등장하는지를 정규식으로 전수 대조합니다. 신화 압력(신화 용사 수만큼
-> 몬스터 체력 최대 +48%, `src/balance/enemies.js`)을 반영하면서 전술 문제의 몬스터 체력
-> 계산이 엔진과 어긋났는데, 검사가 신화 0명 상태만 보고 있었다면 못 잡을 뻔했습니다.
+### 2.8 Modularizing Large Files Without Modifying Import Paths
 
-### 2.8 파일이 커지면 기능별로 나누되, **부르는 쪽은 한 줄도 바꾸지 마라**
-
-2.1의 네 층(data·engine·render·main)은 *역할*의 분리이지 *파일 개수*의 규칙이 아닙니다.
-그래서 게임이 자라면 층 하나가 1,500~2,500줄짜리 단일 파일이 됩니다. 사람에게는 스크롤이
-길어지는 정도지만, **당신(AI)에게는 비용 구조가 바뀝니다** — 한 번 읽는 데 드는 컨텍스트가
-커지고, 아껴서 일부만 읽으면 그 파일 안의 다른 규칙을 못 보고 고칩니다. 0장의 전제
-("산출물이 AI가 읽고 고칠 수 있는 텍스트")는 **읽을 만한 크기**까지 포함합니다.
-
-나눌 때 지킬 것은 하나입니다. **소비자의 `import` 경로를 바꾸지 마세요.**
+As engine files grow beyond 2,000 lines, split logic into sub-modules under `engine/` while maintaining a root **re-export hub (barrel file)**.
 
 ```js
-// engine.js — 이제 재수출 허브(배럴)일 뿐이지만, 부르는 쪽 코드는 그대로다
+// engine.js — Barrel file re-exporting sub-modules
 export * from './engine/state.js';
 export * from './engine/combat.js';
-// …
-// 호출부: import { tick } from './engine.js'   ← 분할 전과 동일
+
+// Consumers continue using: import { tick } from './engine.js'
 ```
 
-- **분할 커밋의 diff가 "이동"만 남게 하세요.** 호출부가 안 바뀌면 리뷰가 "정말 옮기기만
-  했는가"에만 집중됩니다. 경로 변경까지 섞이면 그 안에 숨은 로직 변경을 아무도 못 봅니다.
-- **나누는 김에 중복과 죽은 코드를 걷어내세요.** 큰 파일에는 봇용·게임용 사본이 따로 자란
-  함수나, 배선이 끊긴 채 남은 코드가 반드시 있습니다. 사본은 엔진 한 곳으로 합치세요 —
-  2.3(밸런스 단일 파일)이 수치에 대해 말하는 것을 로직에 대해 말하는 것과 같습니다.
-- **"순수 이동"임을 증명할 수단이 있어야 착수할 수 있습니다.** 3장의 밸런스 봇과 불변식
-  검사가 여기서 값을 합니다 — 분할 전후로 같은 시드의 분포가 그대로면 이동이 맞습니다.
-  이 장치가 없는 상태에서 대규모 분할을 하는 것은, 회귀를 눈으로 찾겠다는 뜻입니다.
-
-> 실측(용사 수학 디펜스 `b7ea908`, 2026-08-05): `engine.js` 1,477줄 → `engine/` 5모듈
-> (state·champion·roster·economy·combat) + 재수출 허브, `render3d.js` 2,555줄 → `gfx/`,
-> `main.js` 1,829 → 1,326줄. **소비자는 여전히 `engine.js` 하나만 import** 합니다. 검증은
-> 엔진 불변식 + 수학 3,000문제 + 밸런스 봇 60판 + 데모 봇 5웨이브 실플레이 스모크(콘솔
-> 에러 0)로 했고, 같은 커밋에서 `comboToAction`·`bestCombo`의 main/bot 사본을 엔진 한
-> 곳으로 합치고 미배선 코드 여덟 가지를 지웠습니다.
+Keeping consumer import paths identical keeps refactoring diffs clean and isolates risk during code reorganizations.
 
 ---
 
-## 3. AI 자동 밸런싱 ★ 이 방법론의 심장
+## 3. Automated AI Balancing ★ (Core Engine)
 
-사람이 손으로 100판 플레이해 난이도를 맞추는 대신, **봇이 실제 엔진으로 수백 판을 자동 플레이하고 사망 분포를 리포트**합니다.
+Instead of manually playing hundreds of sessions to tune difficulty, **automated bots execute the game engine across hundreds of runs to output death-distribution reports**.
 
-### 3.1 가상 플레이어 프로필
-실력대별로 "어떻게 플레이하는가"를 파라미터로 정의합니다.
+### 3.1 Simulated Player Profiles
+
+Define player skill brackets using behavioral parameters:
 
 ```js
 const PROFILES = {
-  '초보': { acc: 0.45, actionsPerTurn: 1, comboChance: 0.15, sloppy: 0.5 },
-  '보통': { acc: 0.70, actionsPerTurn: 3, comboChance: 0.70, sloppy: 0.3 },
-  '고수': { acc: 0.90, actionsPerTurn: 6, comboChance: 1.0,  sloppy: 0 },
+  'beginner':     { acc: 0.45, actionsPerTurn: 1, comboChance: 0.15, sloppy: 0.5 },
+  'intermediate': { acc: 0.70, actionsPerTurn: 3, comboChance: 0.70, sloppy: 0.3 },
+  'expert':       { acc: 0.90, actionsPerTurn: 6, comboChance: 1.0,  sloppy: 0 },
 };
 ```
 
-`acc`(성공률), `sloppy`(실수 확률) 같은 파라미터로 **완벽하지 않은 사람**을 흉내 내는 게 핵심입니다. 최적 플레이만 시뮬레이션하면 실제 난이도를 못 맞춥니다.
+Parameters like `acc` (accuracy) and `sloppy` (mistake rate) mimic **imperfect human gameplay**. Simulating only optimal play fails to reflect actual player difficulty curves.
 
-### 3.2 사망 분포 리포트
-N판을 돌려 도달 웨이브/층의 분포(평균·중앙값·사분위)를 뽑습니다.
+### 3.2 Death Distribution Reports
+
+Execute N automated sessions to track wave/depth distribution (mean, median, percentiles):
 
 ```
-[보통] 초보  평균 9.1웨이브 (중앙값 9)    ← 목표: 초보도 초반은 즐기고, 벽을 만남
-[보통] 보통  평균 17.8웨이브 (중앙값 18)  ← 목표: 중반까지 재미있게
-[보통] 고수  평균 24.3웨이브 (중앙값 25)  ← 목표: 숙련되면 확실히 더 멀리
+[Normal] Beginner     Avg Wave 9.1  (Median  9)   ← Goal: Enjoy early waves, hit wall at W10
+[Normal] Intermediate Avg Wave 17.8 (Median 18)   ← Goal: Smooth mid-game progression
+[Normal] Expert       Avg Wave 24.3 (Median 25)   ← Goal: Mastery pushes deep into late-game
 ```
 
-실력 순서대로 단조 증가하는지, 무한 생존(밸런스 붕괴)이 없는지를 봅니다.
+Verify that survival depth monotonically increases with skill profiles and ensure zero infinite survival exploits exist.
 
-### 3.3 기준선 + 회귀 검증
-튜닝이 끝난 분포를 `baseline.json`에 못 박고, 이후 커밋마다 봇을 다시 돌려 **중앙값이 허용 오차(±3웨이브)를 벗어나면 실패** 처리합니다.
+### 3.3 Baselines & Regression Gates
+
+Lock verified distributions in `baseline.json`. On subsequent commits, re-run bots and fail CI builds if median depth strays beyond allowed tolerances (e.g., ±3 waves).
 
 ```bash
-node scripts/balance-bot.mjs 120 check   # 기준선 이탈 시 exit 1
+node scripts/balance-bot.mjs 120 check   # Exits with 1 if baseline diverges
 ```
 
-> 실제로 용사 수학 디펜스에서 전설 특수능력을 추가했을 때 이 검증이 "고수 중앙값 22→29 이탈"을 즉시 잡아냈고, 스노볼 억제 로직을 추가해 되돌렸습니다. **손으로는 절대 못 찾을 회귀입니다.**
+> **Math Defense Hero Production Note:**
+> Adding legendary evolution traits initially caused expert median wave depth to jump from 22 to 29. The regression gate failed instantly, allowing us to introduce snowball suppression logic before shipping.
 
-**단, 이탈이 전부 "되돌려야 할 회귀"는 아닙니다.** 게임 규칙 자체의 버그(등급이 다른
-재료가 섞여 합성되며 강한 유닛이 조용히 갈려 나가는 것 등)를 고치면, 봇이 그 버그를
-그대로 실행해 온 기존 기준선 자체가 "버그 성적"이었던 것이므로 큰 폭의 정당한 이탈이
-납니다. 이럴 때는 값을 되돌리는 대신 **재측정해 새 기준선으로 못박고, 어긋난 원인을
-`baseline.json`의 comment에 적어 두세요** — 다음 사람(또는 다음 회고)이 "왜 갑자기 확
-쉬워졌지?"를 다시 디버깅하지 않게.
+*Handling Valid Baseline Shift:*
+If a bug fix corrects unintended unit destruction, median survival depth may jump significantly. Rather than reverting valid logic, update `baseline.json` with new measurements and document the reason in comments.
 
-> 실측(용사 수학 디펜스, 2026-08-03): 레시피 조합이 "재료 중 최고 등급"을 소비하던
-> 버그를 고쳐 "같은 등급 2명만 재료가 된다"로 바꾸자 hard/고수 중앙값이 **9→23**으로
-> 뛰었습니다. 기존 9는 봇이 전설 유닛을 저등급 재료로 갈아 넣던 결함을 그대로 반영한
-> 성적이었던 것 — 버그를 고치자 정상적으로 강해졌을 뿐입니다. 규칙 변경 자체의 영향은
-> 전 셀 ±1웨이브뿐이라 재측정 후 새 기준선으로 교체했습니다.
+### 3.4 Decoupling Measurement Bots from Humanlike Bots
 
-### 3.4 봇 프로필 — '측정용 봇'과 '사람 같은 봇'을 분리한다
+Modifying bot behavior invalidates baselines because you can no longer isolate whether metric shifts stem from game changes or bot code edits. Maintain two distinct bot categories:
 
-기준선을 잡은 봇의 행동을 나중에 똑똑하게 고치면 **기준선이 무의미해집니다**. 분포가 바뀐 게
-게임 변경 때문인지 봇 변경 때문인지 구분할 수 없기 때문입니다. 그래서 프로필로 나눕니다:
+- **`hard` (Measurement Bot):** Baseline gatekeeper. AI logic is strictly frozen once baselines are set.
+- **`human` (Humanlike Bot):** Simulates human perception. Parses only visible HUD elements (HP text, combination hints, rarity borders) and operates with realistic reaction delays.
 
-- `hard` — 기준선 전용. 한 번 기준선을 뜨면 **행동을 동결**합니다.
-- `human` — 사람처럼 판단하는 봇. 기준선과 비교하지 않고 참고 지표로만 씁니다.
+When giving humanlike bots defensive behaviors (e.g., retreating when low on HP), enforce **action timeouts** to prevent infinite boss battle stalemates.
 
-사람형 봇의 설계 원칙은 **"봇에게 사람이 못 보는 정보를 주지 않는다"** 입니다. 사람형 봇은
-HUD의 체력 텍스트, 카드의 조합 힌트, 희귀도 테두리처럼 **플레이어가 실제로 화면에서 읽는 것**만
-파싱해 판단합니다. 대신 '지도를 읽는 능력'(BFS)은 허용합니다 — 사람도 미니맵을 보고 "저기까지
-갈 만한가"를 가늠하기 때문입니다.
+### 3.5 The 2 Core Rules of Difficulty Curves
 
-**왜 이게 필요한가 (실측)**: 같은 게임을 기준선 봇은 6·9층에서 끝내는데, 사람형 봇은 12층
-캡까지 3판 전부 무사히 갔습니다(평균 아이템 46.7개 — 기준선 봇은 보물상자를 아예 안 열어
-훨씬 적습니다). **기준선은 체감 난이도가 아닙니다.** 기준선은 회귀를 잡는 고정된 자로 쓰고,
-"이 게임이 어렵나?"라는 질문에는 사람형 수치로 답해야 합니다.
-
-**함정 하나**: '조심하는' 행동은 기존 교착 복구를 덮어쓸 수 있습니다. 사람형 봇에 "체력이
-낮으면 보스와 거리를 벌린다"를 넣었더니, 원래 있던 복구 장치(보스 체력이 안 깎이면 교전
-거리를 좁히고, 그래도 안 되면 길찾기로 파고들기)를 매 프레임 무력화해 3판 중 1판이 보스전에서
-교착됐습니다. 후퇴처럼 소극적인 행동에는 **반드시 시한을 두고**, 시한이 지나면 결판을 내게 하세요.
-
-**측정 예산도 프로필별로**: 사람형은 보상을 다 챙기며 훨씬 깊이 가므로 판당 시간이 몇 배입니다.
-예산 초과 시 "교착?"이라고만 찍으면 오진합니다 — 봇의 마지막 진행 지점을 함께 남겨서
-'멈춤'과 '그냥 잘해서 안 끝남'을 로그만으로 구분할 수 있게 하세요.
-
-### 3.5 난이도 곡선 두 가지 원칙
-
-**① threat ramp — 적 체력을 부풀리지 말고 "받는 피해"를 가속하라.**
-후반에 파밍 빌드가 무적이 되는 스노볼을 막는 가장 깔끔한 방법. 초반(≤임계)은 그대로 두고, 임계 이후에만 플레이어가 받는 피해를 가속합니다.
+**① Threat Ramp — Accelerate damage taken rather than bloating enemy health.**
 
 ```js
-// 나쁨: 적 HP를 무한정 부풀림 → 초반까지 딱딱해짐
-// 좋음: 받는 피해를 후반에만 가속 → 초반 난이도는 보존
+// Bad: Infinite enemy HP bloat → Spongy early game enemies
+// Good: Accelerate damage taken in late waves → Preserves early game feel
 export const castleDmgScale = (w) => 1 + Math.max(0, w - 15) * 0.08;
 ```
 
-**② soft cap — 곱연산 성장 대신 상한에 점근시켜라.**
-```js
-value += (CAP - value) * 0.15;   // 첫 픽은 체감 그대로, 후반 픽은 스스로 완만
-```
-백층 던전은 이동속도·사거리를, 용사 수학 디펜스는 웨이브 HP 곡선을 이 방식으로 다뤘습니다. 특히 사거리 상한을 *교전 반경보다 작게* 두면 "안전한 원거리 스나이핑"을 원천 봉쇄할 수 있습니다.
-
-> **함정 — threat ramp는 플레이어 성장이 유한할 때만 통합니다.** ①(받는 피해 가속)을 적용해도
-> 플레이어 스탯이 픽마다 **곱연산**으로 복리 성장한다면 램프를 결국 추월합니다. 실측(백층 던전):
-> 30층부터 받는 피해를 가속하는 threat ramp를 넣었는데도, 캡 50층까지 파밍 빌드가 사망 0·교착
-> 0로 완주했습니다(50층 아이템 195.5개). 원인은 적 체력이 층당 **선형**(`18+층×7`)인데 공격력·
-> 연사가 픽마다 **곱연산**(×1.18·×1.14)으로 쌓여, 램프를 아무리 가속해도 선형이 곱연산을 못
-> 따라잡았기 때문입니다. **처방: "받는 피해"뿐 아니라 DPS에 직결되는 성장 스탯(공격력·연사 등)
-> 에도 ②의 소프트 캡을 씌우거나, 층당 자원 유입 자체를 제한하세요.** 이동속도·사거리에만 소프트
-> 캡을 걸고 공격력·연사는 무제한 복리로 두면, threat ramp는 스노볼을 늦출 뿐 멈추지 못합니다.
-
-### 3.6 봇을 CI에서 돌릴 때 — 실측 함정 셋
-
-로컬에서 잘 돌던 봇이 CI에서는 그냥 멈춥니다. 세 가지가 원인의 대부분이었습니다.
-
-**① 프레시 프로필 함정 ★** — 개발자 브라우저에는 세이브(`localStorage`)가 이미 있어 인트로·튜토리얼이
-건너뛰어집니다. CI 러너는 **항상 첫 방문자**라, 봇이 예상 못 한 인트로 화면에서 영원히 갇힙니다.
-실제로 "아무 버튼이나 누른다"는 범용 규칙이 인트로의 잠긴 퀴즈를 눌러 무한 대기에 빠졌습니다.
-→ 타이틀·인트로 같은 **초기 화면 분기를 범용 클릭 규칙보다 먼저** 명시적으로 처리하고,
-봇 테스트는 언제나 빈 프로필에서 하세요.
-
-**② 줄여야 할 건 로직이 아니라 픽셀 ★** — CI에는 GPU가 없어 소프트웨어 렌더러(SwiftShader)로 돕니다.
-그대로 두면 렌더가 병목이 되어 1판에 30분이 걸렸습니다. **뷰포트를 줄이고 저품질 모드를 강제**하면
-(렌더 전용 설정이라 시뮬레이션 로직·밸런스는 불변) 같은 5판이 16분으로 떨어집니다.
+**② Soft Cap — Asymptotically approach limits instead of multiplicative scaling.**
 
 ```js
-// 봇 주행 전용 페이지 — 로직은 그대로, 픽셀만 줄인다
-const ctx = await browser.newContext({ viewport: { width: 640, height: 360 } });
-await ctx.addInitScript(() => localStorage.setItem('gfx', '"lite"'));
+value += (CAP - value) * 0.15;   // Diminishing returns keep stats bounded
 ```
 
-**③ 에러 필터 규율** — 스모크 게이트가 "콘솔 에러 0건"을 요구한다면, **by-design 404를 반드시 제외**해야
-합니다(파비콘, '있으면 쓰고 없으면 폴백'하는 선택적 리소스). 안 그러면 게이트가 항상 빨간불이고,
-사람은 곧 그것을 무시하게 됩니다 — 그 순간 게이트는 죽은 장치입니다.
-**외부 서비스에 의존하는 게임이라면 그 호스트에서 온 에러도 같은 이유로 제외**하세요.
-남의 레이트리밋으로 내 배포가 막히면 게이트는 며칠 안에 무시당합니다.
+Apply soft caps to movement speeds, attack ranges, and HP curves to prevent unbounded snowballing.
 
-### 3.7 표본이 필요 없을 때도 있다 — 결정점을 기대값으로 검사하라
+### 3.6 3 Rules for Running Bots in CI
 
-3장의 전제는 "코어 루프가 길고 복잡해서 돌려 봐야 안다"입니다. 그런데 **선택지가 몇 개뿐인
-푸시-유어-럭**(한 번 더 갈까, 여기서 챙기고 나갈까)은 돌리지 않아도 됩니다 —
-기대값이 0이 되는 지점을 **닫힌 식으로** 계산해 그것을 테스트로 굳히는 편이 훨씬 정확하고 빠릅니다.
+1. **Clean Profile State:** Always initialize bots with empty local storage to prevent skipping intro/tutorial flows.
+2. **Reduce Viewport Resolution:** Reduce headless viewports (640x360) to eliminate software rendering bottlenecks.
+3. **Filter Benign 404s:** Exclude non-critical asset errors (e.g., favicons or optional sound fallbacks) so CI gates only fail on genuine runtime errors.
+
+### 3.7 Closed-Form Expectation Testing for Decision Points
+
+For simple Push-Your-Luck mechanics (e.g., choosing whether to bank rewards or push deeper), compute the zero-expectation breakeven threshold mathematically instead of running statistical bot runs:
 
 ```js
-// 한 걸음: 안전 +1, 순풍 +2, 함정이면 지금까지 쌓은 t를 전부 잃는다
-// 계속 오를 기대값 = p안전·1 + p순풍·2 − p함정·t
-const breakeven = (pSafe + 2 * pBonus) / pTrap;   // → 3.59층
-ok(breakeven >= 2 && breakeven <= 8);             // 2~8층 밖이면 실패
+const breakeven = (pSafe + 2 * pBonus) / pTrap; // e.g., 3.59 floors
+ok(breakeven >= 2 && breakeven <= 8);
 ```
 
-핵심은 **숫자를 고정하는 게 아니라 "결정이 존재하는지"를 고정**한다는 점입니다.
-손익분기가 1 아래로 내려가면 *언제나 즉시 귀환*이 정답이고, 아주 커지면 *끝까지 간다*가
-정답입니다. 둘 다 선택이 사라진 상태 — **3-Gate ②(결정을 더하는가)가 회귀한 것**이고,
-이 한 줄이 그것을 커밋 전에 잡습니다. 표본 수백 판보다 정확합니다(분산이 0이니까).
+### 3.8 Clock Injection for Time-Bound Rules
 
-> 적용 범위: 도박형 보너스 라운드, 연승 배율, 은행(bank) 메커닉, 이중 아니면 무(double-or-nothing) —
-> **"더 갈까 말까"가 있는 모든 곳.** 반대로 상호작용이 얽힌 전투·경제는 여전히 봇이 필요합니다.
+Rules tied to real time (daily resets, weekly events) should accept injected timestamps (`isEventNow(now = Date.now())`). Test time jumps in local test suites to verify daily bonuses instantly.
 
-### 3.8 실시간 시계에 묶인 규칙은 시계를 주입식으로
+### 3.9 Tracking Near-Miss Metrics
 
-주간 보스, 일일 초기화, 요일·시간대 이벤트, 긴 쿨다운 — 실시간에 묶인 규칙은
-**"그 시각이 될 때까지 기다려야만" 검증되는 함정**입니다. 주 1회 1시간짜리 이벤트라면
-회귀 하나를 확인하는 데 최악 일주일이 걸리고, 결국 아무도 검증하지 않게 됩니다.
+A 0% death rate does not guarantee a lack of threat. Measure health pool loss variance across surviving runs to verify whether players experience true high-stakes tension.
 
-- **판정 함수는 `now`를 인자로 받게 하세요** (`isEventNow(now = Date.now())`).
-  그러면 표본 수십 개를 밀리초 안에 훑을 수 있습니다.
-- **로컬 런타임이 시계를 조작할 수 있으면 그것을 쓰세요.** 온체인 게임이라면 로컬 체인의
-  `evm_increaseTime`으로 토요일 21시로 점프해 2배 보상이 실제로 2배인지 봅니다.
-  서버 게임이라면 시계를 주입 가능한 모듈로 두는 것으로 같은 효과를 냅니다.
-- **표기 시각과 판정 시각이 같은 기준인지 대조하세요.** 화면은 로컬(KST), 판정은 UTC인
-  어긋남이 가장 흔합니다 — 표본 64개를 양쪽에 먹여 결과가 일치하는지 보면 끝납니다.
+### 3.10 Avoiding Teleportation in Bot Simulations
 
-> 실측: 기와장터는 "장날(토 21시 KST) 온기 2배"를 로컬 체인에서 시간 점프로 검증하고,
-> 컨트랙트와 클라이언트의 장날 판정이 표본 64개에서 일치하는지 대조합니다.
-> 실시간 관찰로는 **주 1회 1시간**만 확인할 수 있는 것을 커밋마다 확인합니다.
+Never teleport bots directly to bosses or exits to speed up combat tests. Teleporting bypasses spatial approach risk and invalidates combat data.
 
-### 3.9 사망률만으로 "긴장"을 판단하지 말 것 — 근접사(near-miss) 폭을 함께 재라
+### 3.11 Deferring Heavy State Updates Outside Combat Frames
 
-사망 분포(3.2)는 "얼마나 자주 죽는가"만 봅니다. 그런데 사망 0%가 곧 "위협이 없었다"는 뜻은
-아닙니다 — 매번 아슬아슬하게 비껴갔을 뿐일 수 있습니다. **사망 여부와 별개로, 살아남은 판에서
-잃은 체력(또는 자원)의 폭**을 함께 측정하세요.
-
-```
-11판 겪음, 사망 0, 그러나 체력 손실 평균 20.3% · 최대 72.7%
-(개별: 0·5·10·10·11·11·18·18·30·37·73%)
-```
-
-> 실측: 백층 던전의 "긴장 구간"(출구 앞 몬스터 광폭화)을 사람형 봇으로 11회 통과시켰더니
-> 사망은 0건이었습니다. 처음엔 "DPS가 높아 적이 위협이 아니었다"고 가설을 세웠지만, 근접사 폭을
-> 재보니 틀렸습니다 — 대부분 체력 1/5을 대가로 치렀고, 11번에 한 번은 죽기 직전까지 갔습니다.
-> **사망률 0%는 "위협 없음"이 아니라 "억울한 죽음 없이 긴장만 만드는 분포"였던 것**이고, 이는
-> 사망 분포만 봤다면 영원히 몰랐을 결론입니다.
-
-### 3.10 봇 검증 오염 — 순간이동으로 만든 상황은 사람이 못 만든다
-
-전투·밸런스를 잴 때 봇을 무리 한가운데나 목표 지점(출구 등) 위로 **순간이동**시켜 상황을 빨리
-만들고 싶은 유혹이 있습니다. 하지 마세요 — 그 상황 자체가 실제 플레이에서는 나올 수 없는 것이라
-결과가 왜곡됩니다.
-
-> 실측: 새 위협 구간(출구 근처 적 광폭화)을 검증하며 봇을 출구 바로 위로 순간이동시켰더니 5초를
-> 못 버티고 죽었습니다. 이건 그 구간이 위험하다는 증거가 아니라 **텔레포트 자체가 만든 결과**
-> 였습니다 — 실제 플레이어는 항상 걸어서 접근하므로 그 사이에 회피·반격 기회가 있는데, 텔레포트는
-> 그걸 통째로 지웁니다. 전투가 얽힌 검증은 봇이 **실제로 걸어서** 접근하게 하세요. 예외는 적이
-> 없는 곳(마을 등, 헤드리스 캔버스 미측정 워크어라운드 목적)뿐입니다.
-
-### 3.11 실시간 전투 중 무거운 상태 갱신은 그 자체로 난이도가 된다 — 보상 지급은 안전 지점으로 미뤄라
-
-3.10이 "봇이 만든" 오염이라면 이건 **엔진 자신이 만드는** 오염입니다. 보상 지급처럼 여러 값을
-한꺼번에 갱신하는 무거운 콜백(스탯 객체 교체 + 빌드 카운트 + 도감 갱신처럼, React라면 `setState`
-여러 개를 한 이벤트 핸들러에 몰아 부르는 것)을 **실전투가 진행 중인 프레임**에서 실행하면, 렌더가
-빠듯한 환경(헤드리스 소프트웨어 렌더러 등)에서 그 프레임만 델타 타임이 튀고, 하필 그 튄 프레임에
-접촉 피해 판정이 걸릴 수 있습니다. 결과는 "이 지점이 더 어렵다"로 측정되지만, 실은 **콘텐츠가
-아니라 렌더 스파이크가 만든 난이도**입니다.
-
-```js
-// 나쁨: 처치한 그 프레임에 무거운 리렌더를 바로 유발
-onKill(elite) { grantReward(ELITE_CARD); }   // 스탯+빌드+도감 setState 3~4개가 전투 중 프레임에 낀다
-
-// 좋음: 처치는 플래그만 세우고, 지급은 이미 있는 "안전 지점"(비전투 전환 시점)으로 미룬다
-onKill(elite) { pendingRef.current = true; }
-onExit() { if (pendingRef.current) { pendingRef.current = false; grantReward(ELITE_CARD); } }
-```
-
-- **원인을 좁히는 방법은 9.1과 같습니다** — 대조군(변경 전 커밋)과 나란히 돌려 분포가 갈리면
-  게임 변경이 원인이고, 이분탐색(기능 전체 끄기 → 그중 UI 표시만 끄기 → 지급 함수만 끄기)으로
-  어느 콜백이 범인인지 좁히세요.
-- **새 안전 지점을 만들 필요가 없을 때가 많습니다.** 기존 보상 지급 지점(보물상자·보스·마을
-  선물·이벤트 성공)은 대개 이미 실전투가 잠시 멎는 순간에만 지급되고 있습니다 — 새 보상도
-  그 자리(층 전환·포털 통과 등)를 그대로 재사용하면 됩니다.
-- **징후를 먼저 살피세요.** 사망 분포가 정확히 그 보상이 등장하기 시작하는 지점에서만 뭉치고
-  그 앞뒤는 멀쩡하다면, 콘텐츠 난이도보다 이 패턴을 먼저 의심하세요.
-
-> 실측(백층 던전, 2026-07-30): 정예 몬스터 처치 시 전용 카드를 처치 즉시 지급했더니 하드런
-> (기준선 봇) 6판 사망 층이 4·4·4·4·5·6(중앙값 4)으로 무너졌습니다 — 전부 정예가 처음 등장하는
-> 층 근처였습니다. 변경 전 커밋을 같은 설정으로 돌린 대조군은 5·5·6·8·9·9(중앙값 8, 정상)였고,
-> 지급 트리거를 통째로 끄면 8·8·9로 돌아왔습니다. 지급 콜백을 처치 프레임에서 **다음 포털
-> 통과 시점**(다른 보상이 이미 안전하게 지급되던 자리)으로 옮기자 6·6·6·8·9·9(중앙값 8)로
-> 복귀했습니다 — 카드 자체(수치·확률)는 한 글자도 안 바꿨습니다.
+Defer heavy UI and state re-renders (e.g., card unlocks or codex rewards upon elite kill) to peaceful transition points (e.g., portal entry). Deferring updates prevents frame drops during active combat ticks that cause false-positive bot deaths.
 
 ---
 
-## 4. 그래픽 "인디 탈출" — 에셋 0개로 그럴듯하게
+## 4. Zero-Asset Graphics & Visual Polish ("Escaping Indie Looks")
 
-전부 `render`에서 코드로 생성합니다. 3D든 2D든 아래 기법 대부분이 이식됩니다.
+Generate all visual elements in code inside the `render` layer without external 3D models or art files.
 
-| 기법 | 효과 | 구현 요점 |
-|------|------|-----------|
-| **블롭 그림자** | 유닛이 바닥에 "붙어" 보임 (가성비 1위) | 유닛 아래 방사형 그라디언트 타원 |
-| **블룸** | emissive 재질이 실제로 빛남 | 밝은 요소만 임계값으로 걸러 블러+가산합성 |
-| **절차 텍스처** | 텍스처 1장 × 팔레트 = 여러 테마 | 그레이스케일 노이즈 × 팔레트 곱셈 |
-| **파티클 풀** | 처치/폭발/화염 | 고정 배열(할당 없음), ttl 감소 |
-| **데미지 숫자 풀** | 타격 피드백 | strokeText+fillText, 위로 뜨며 페이드 |
-| **카메라 셰이크** | 타격감 | 누적→선형 감쇠→**제곱** 적용 (작은 흔들림은 미세하게) |
-| **안개/비네트** | 깊이감·긴장 | 진행할수록 안개를 좁힘 |
-| **절차 캐릭터** | 사람 모양 유닛 | 박스/구 프리미티브 치비 비율 + 직업별 소품(투구·활·지팡이) + 등급 망토 |
+| Technique | Visual Benefit | Core Implementation |
+|-----------|----------------|---------------------|
+| **Blob Shadows** | Anchors units visually to ground | Radial gradient ellipse under units |
+| **Bloom** | Emissive surfaces glow vividly | Threshold filter + additive Gaussian blur |
+| **Procedural Textures** | Unlimited themes from 1 texture | Grayscale noise × color palette multiplication |
+| **Particle Pool** | Explosions, impacts, fire | Zero-allocation fixed arrays with TTL decay |
+| **Floating Damage Numbers** | Impact feedback | Canvas strokeText + fillText fading upwards |
+| **Camera Shake** | Hit weight & feedback | Cumulative impulse → squared decay curve |
+| **Fog & Vignette** | Depth & environmental mood | Distance-based fog density attenuation |
+| **Procedural Characters** | Distinct visual silhouettes | Primitive geometry + class props (helm, staff) |
 
 ```js
-// 카메라 셰이크: 이벤트마다 다른 양을 누적, 매 프레임 제곱 감쇠
-addShake(v) { this.shake = Math.min(0.8, this.shake + v); }   // 히트 +0.07, 처치 +0.5, 피격 +0.42
-// frame:
+// Camera Shake: Accumulate impulse per hit, decay quadratically per frame
+addShake(v) { this.shake = Math.min(0.8, this.shake + v); }
+// Frame update:
 this.shake = Math.max(0, this.shake - dt * 1.7);
 const s2 = this.shake * this.shake;
 cam.position.x += (Math.random() - 0.5) * s2 * 2.2;
 ```
 
-### 4.1 절차 생성에서 한 단계 더 — 빛·그림자·톤매핑
+### 4.1 Lighting, Real-time Shadows & Tone Mapping
 
-프리미티브 절차 생성은 "형태"까지만 해결합니다. 여기서 장난감 느낌을 벗기는 건 조명입니다.
+1. **Real-time Shadows:** Use 1 Directional Light + PCFSoft 2048 shadow maps. Fit the shadow camera bounds tightly around the active playfield area.
+2. **Filmic Tone Mapping:** Enable ACESFilmic tone mapping to prevent bright emissive particles from blowing out into pure white pixels.
+3. **Automated Shadow Verification:** Verify shadow map rendering programmatically using pixel diffing (`readPixels`) between shadow ON/OFF frames.
 
-| 요소 | 설정 | 얻는 것 |
-|------|------|---------|
-| **실시간 그림자** | 방향광 1개 + PCFSoft 2048 섀도맵, 섀도 카메라는 **플레이 필드에 딱 맞게** | 유닛이 바닥에 붙고 입체가 생긴다 |
-| **필름 톤매핑** | ACESFilmic + 노출 1.0~1.1 | 밝은 부분이 흰색으로 뭉개지지 않는다 |
-| **절차 텍스처** | 노이즈 + 붓질/벽돌/자갈 패턴을 Canvas로 그려 반복 | 단색 면이 사라진다 |
+### 4.2 Culling Off-Screen Elements (Frustum Checks)
 
-그림자 카메라 범위는 **넓힐수록 흐려집니다**. 맵 전체가 아니라 실제로 유닛이 서는 영역만 덮으세요.
-`bias -0.0006` / `normalBias 0.02` 정도를 같이 걸어야 줄무늬(shadow acne)가 안 생깁니다.
-
-톤매핑을 켜면 하늘·UI 같은 "이미 완성된 색"까지 눌립니다. 그런 재질만 `toneMapped: false`로
-빼세요. 안 그러면 파란 하늘이 흰색으로 날아갑니다.
-
-**그림자가 실제로 찍히는지 검증하는 법** — 스크린샷을 못 볼 때도 확인할 수 있습니다.
-그림자를 켠 프레임과 끈 프레임을 `readPixels`로 받아 픽셀 차분을 세세요.
-
-```js
-const before = grab();                                  // 그림자 ON
-r.shadowMap.enabled = false; refreshMaterials(); render();
-const after  = grab();                                  // 그림자 OFF
-// 달라진 픽셀 비율이 1% 이상이면 그림자가 실제로 그려지고 있는 것
-```
-
-전체 평균 밝기는 **믿지 마세요.** 그림자는 화면의 1~2%만 덮기 때문에 평균은 0.2밖에 안 움직입니다.
-"차이가 없다"가 아니라 "평균으로는 안 보인다"입니다. 변한 **픽셀 수**를 세야 합니다.
-
-### 4.2 안 보이는 것을 만들지 마라 — 카메라 절두체부터 확인하라
-
-탑다운/쿼터뷰 게임에 하늘 돔과 구름을 정성껏 넣었는데, 화면에 단 한 픽셀도 안 나온 적이 있습니다.
-카메라가 44도 내려다보고 수직 화각이 46도면 **화면 맨 위조차 수평선 아래**입니다. 지평선이
-프레임에 들어올 일이 없으니 하늘은 영원히 안 보입니다.
-
-배경 요소를 만들기 전에 30초짜리 검사를 먼저 하세요.
+In top-down or isometric cameras, avoid instantiating background elements (like sky domes or distant clouds) that lie outside the view frustum:
 
 ```js
 const v = obj.position.clone().project(camera);
-// |v.x| < 1 && |v.y| < 1 && v.z < 1  이어야 화면 안. 아니면 만들 필요가 없다
+// Keep only if |v.x| < 1 && |v.y| < 1 && v.z < 1
 ```
 
-> 실측: 구름 5장의 NDC y가 1.9~2.6이었습니다. 전부 화면 위로 벗어난 것이라 삭제했고,
-> 대신 안개 색을 하늘색으로 맞춰 원경이 "하늘 안개"로 읽히게 했습니다. 만들기 전에 쟀으면
-> 30초에 끝났을 일입니다.
+Implement **Adaptive Quality Scaling**: Sample actual FPS 4 seconds after boot for 3 seconds. If FPS < 45, degrade bloom, DPR, and particle counts automatically, caching the choice in `localStorage`.
 
-같은 이유로 **기능을 지웠으면 그 기능의 렌더 코드도 같이 지우세요.** 레벨 개념을 없앤 뒤에도
-유닛마다 레벨 스프라이트와 텍스처를 만들고 있었습니다 — `visible`이 항상 false라 아무도 몰랐고,
-유닛 수만큼 낭비가 쌓였습니다.
+### 4.3 Integrating Textures: Separating Color from Bump
 
-**자동 품질 조절:** 부팅 4초 후 3초간 실측 FPS를 재고, 45 미만이면 블룸·DPR·파티클을 줄인 "가벼움" 모드로 스스로 강등하고 결정을 `localStorage`에 캐시합니다. 저사양 기기에서도 게임이 멈추지 않습니다.
+When applying textures to procedural meshes:
+- **Natural surfaces (wood, dirt):** Use `map` (color map).
+- **Stylized elements with defined colors (roof tiles, plaster):** Apply `bumpMap` only to gain surface depth while preserving palette colors.
 
-### 4.3 사진을 얹기로 했다면 — **색이냐 결이냐**부터 정하라
+### 4.4 Positional Impact Ring vs Camera Shake for Auto-Shooters
 
-절차 생성 지오메트리에 반입 텍스처(부록 B)를 씌울 때, 실패는 거의 항상 같은 자리에서 납니다:
-**사진의 색까지 가져와서** 공들여 정한 팔레트가 무너지는 것.
+In games featuring rapid auto-firing weapons, triggering camera shake on every hit causes cumulative screen vibration and motion sickness. Replace global camera shake with **positional ground impact rings** (`ripple(x, z, power)`).
 
-| 자리 | 무엇을 가져오나 | 왜 |
-|------|----------------|-----|
-| 색이 곧 정답인 표면 (나무·흙바닥·돌) | `map` (컬러맵) | 사진의 색이 우리가 고를 색보다 낫다 |
-| 색이 이미 정해진 표면 (기와·회벽·브랜드 색) | `bumpMap`만 | 결·요철만 얻고 색은 우리 값 그대로 |
-| 스타일이 다른 넓은 면 (스타일라이즈드 잔디·하늘) | **아무것도 안 얹는다** | 납작한 색면 사이에 사진 한 장이 끼면 그것만 튄다 |
+### 4.5 Mobile Viewport Optimization & Performance Profile
 
-실측: 한옥 지붕에 클레이 타일 사진을 컬러맵으로 씌웠더니 잿빛 기와가 **서양 붉은 기와**가
-됐고, 흰 회벽은 갈색이 됐습니다. 같은 사진을 `bumpMap`으로만 쓰자 색은 그대로면서 기와의
-골이 살아났습니다. 바깥 잔디에는 흙 사진을 아예 얹지 않았습니다 — 초록 틴트로 곱하면
-올리브색 진창이 되고, 치비 아바타·플랫셰이딩과 결이 어긋납니다.
-
-**함정: 늦게 도착한 텍스처는 화면에 안 나타난다.** 비동기로 받은 맵을 이미 렌더된 재질에
-꽂으면, 엔진이 셰이더를 다시 컴파일하지 않아 **색만 바뀌고 결은 안 보입니다.** three.js면
-`material.needsUpdate = true`, React Three Fiber면 재질에 `key`를 걸어 통째로 새로 만들게
-하세요. 증상이 "안 붙었다"가 아니라 "붙었는데 안 보인다"라 진단이 오래 걸립니다.
-
-> 텍스처 개수 = GPU 업로드 개수입니다. 같은 사진을 반복 배수만 달리해 쓰려면 `clone()`이
-> 필요한데 clone은 따로 올라가므로, **자리마다 하나씩** 만들어 공유하세요. 반복이 너무
-> 촘촘하면 멀리서 평평한 색으로 뭉개집니다 — 한 칸이 3~4m는 되게 잡으세요.
-
-### 4.4 자동 발사가 있다면 카메라 셰이크 대신 **위치를 가진 임팩트**를 써라
-
-카메라 셰이크(위 표)는 "한 방"을 전제로 한 장치입니다. 공격이 자동으로 계속 나가는 게임
-(자동 조준·자동 발사)에서는 명중마다 셰이크가 누적돼 감쇠가 못 따라가고, 전투 내내 화면이
-진동합니다.
-
-```js
-shake.current = Math.min(0.6, shake.current + 0.22);   // 평타 명중마다 — 전투 중 수십 번 호출된다
-```
-
-실측(백층 던전, 2026-07-27): "몬스터와 싸울 때 화면이 흔들려 멀미가 난다"는 신고를 재현해
-원인을 이렇게 확인했습니다. 처방은 **화면(카메라)이 아니라 세계가 반응하게** 하는 것 —
-카메라 위치는 그대로 두고, 맞은 자리에 좌표를 가진 임팩트(바닥 충격 링 등)를 터뜨립니다.
-
-```js
-ripple(x, z, power, color);   // cam.position은 건드리지 않는다. 히트스톱(dt=0, → 9장)은 그대로 둔다
-```
-
-부수 효과가 아니라 이득입니다 — 화면 전체를 흔드는 셰이크는 "어디서 터졌는지" 정보가
-없지만, 좌표를 가진 임팩트는 때린 자리(적)와 맞은 자리(내 발밑)를 위치·색으로 구분해
-보여줍니다. `impact()`류 함수의 인자를 *흔들 방향 벡터*가 아니라 *터진 좌표*로 설계하세요.
-
-> 검증은 "안 흔들리는 느낌"이 아니라 픽셀로: 효과 전/후 스크린샷을 diff해 **변화 픽셀이
-> 어디 몰려 있는지** 보세요. 실측: 임팩트 프레임은 변화가 플레이어 중심 반경 57~70px에
-> 몰렸고(대조군 파티클 이펙트는 중앙값 598px — 화면 가장자리까지 퍼짐), 전체 92만 픽셀 중
-> 변화는 0.2%(1.9천)뿐이었습니다 — 카메라가 실제로 안 움직였다는 근거입니다.
-
-이 문제는 자동 발사가 있는 게임에만 해당합니다. 턴제나 클릭 한 번에 한 방인 게임은
-기존 셰이크 그대로 써도 누적되지 않습니다.
-
-### 4.5 모바일에서는 장식을 접고, 그 화면 지분을 전장에 되돌려줘라 — 그리고 처음부터 낮게 시작하라
-
-4.2의 자동 품질 조절(부팅 후 실측 FPS로 라이트 모드 강등)은 **성능만** 봅니다. 그런데
-하늘·바다·풀밭 같은 장식 배경은 화면의 상당 지분(실측 19%)을 차지하고 있어서, 폰처럼
-화면이 작을 때는 그 지분 자체가 아까운 자원입니다 — 꺼도 그만인 장식이 조작 대상(발판·
-전장)이 들어갈 자리를 계속 깔고 앉아 있는 셈입니다.
-
-- **장식을 끌 때 카메라도 그 자리를 되돌려받게 하세요.** 장식을 켤 때는 화각을 좁혀 배경을
-  넓게 보여주고, 끌 때는 화각을 넓히고 시선을 낮춰 그만큼을 실제 플레이 영역에 돌려주세요
-  — 발판이 커지는 덤도 따라옵니다(터치 타깃이 커집니다).
-- **모바일로 판정되면 처음부터 최저 품질로 시작하세요.** "부팅 후 몇 초 측정하고 느리면
-  강등"은 GPU가 불확실한 데스크톱에는 맞지만, 이미 모바일로 판정된 기기에는 **그 측정
-  구간의 버벅임 자체가 첫인상**이 됩니다 — 이미 아는 답을 굳이 몇 초짜리 버벅임으로
-  확인하지 마세요. 판정은 `pointer: coarse` 미디어쿼리를 우선하고, 안 되면 UA 스니핑으로
-  보강하세요(창을 좁혀도 `pointer: coarse`로는 안 바뀌므로 데스크톱에서 강제로 좁힌
-  뷰포트만으로는 재현·검증이 안 됩니다 — 강제 쿼리 플래그를 하나 열어 두세요).
-  ```js
-  const isMobile = () =>
-    (typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches) ||
-    /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent || '');
-  ```
-- **장식 on/off가 카메라·지오메트리까지 바꾼다면 실행 중에는 토글하지 마세요.** 라이트로
-  낮춰도 여전히 기준 FPS(실측 26) 미만이면, 그 자리에서 끄는 대신 **다음 실행부터** 장식
-  없이 시작하도록 결정만 저장하세요. 재질만 바꾸는 품질 토글과 달리 장식은 시야각·지형까지
-  바꾸므로 플레이 도중 갈아 끼우면 방향감각이 끊깁니다.
-
-> 실측(용사 수학 디펜스, 2026-08-04): 모바일 판정 시 바람 잔디·바닷가·하늘 밴드·반딧불이를
-> 아예 만들지 않고(감추는 게 아니라), 화각을 54°→46°로 넓히고 시선을 낮춰 그 지분을
-> 전장에 돌려줍니다. 삼각형·셰이더 프로그램 수가 큰 폭으로 줄고(각각 약 1/3, 1/1.4),
-> 라이트로 낮춰도 26fps 미만이면 다음 실행부터 장식 없이 시작합니다. 시간대 조명(해
-> 각도·색·안개)은 값이 공짜라 모바일에서도 그대로 둡니다 — 끄는 기준은 "비용이 드는가"이지
-> "장식인가"가 아닙니다.
+Detect mobile devices via `pointer: coarse` media queries and initialize at low quality from boot. Reclaim viewport area occupied by decorative background geometry by widening the camera FOV to enlarge touch targets.
 
 ---
 
-## 5. 사운드 — Web Audio 합성, 파일 0개
+## 5. Zero-Asset Audio Synthesis (Web Audio API)
 
-효과음 전체를 **두 개의 원시 도구**로 만듭니다.
+Synthesize all audio effects and background music procedurally using two core primitives:
 
 ```js
-tone(freq, start, dur, type, vol, glideTo)  // 오실레이터 1개 + 게인 엔벨로프
-noise(start, dur, vol, freq, q)             // 화이트노이즈 → 밴드패스 필터
+tone(freq, start, dur, type, vol, glideTo)  // Single oscillator + Gain Envelope
+noise(start, dur, vol, freq, q)             // White Noise + Bandpass Filter
 ```
 
-그 위에 소리를 "레시피"로 정의합니다. **디자인 어휘**가 핵심입니다:
+### 5.1 Audio Design Recipes
 
-- **성공 = 상승 아르페지오**(도-미-솔-도), **실패 = 하강 + 부드럽게** — 아이 대상 게임에서 특히, 오답을 기죽이지 않기.
-- **히트 = 아주 짧은 필터드 노이즈 + 레이트 리밋(45~70ms)** — 연사 시 기관총처럼 뭉개지지 않게.
-- **전설/보스 = 팡파레·포효** — 잭팟 순간에 청각 보상.
-- **저체력 = 심장박동 + 화면 붉은 맥동** — 거의 공짜인 고임팩트 긴장 연출.
+- **Success:** Ascending arpeggio (C-E-G-C).
+- **Failure:** Soft descending tone (avoid harsh sound design on incorrect answers).
+- **Hit Impact:** Short bandpass filtered noise with rate-limiting (45–70ms threshold).
+- **Low HP Alarm:** Low-frequency heartbeat pulse + synchronized screen edge pulse.
 
-**BGM도 파일 0개**: 16분음표 스텝 시퀀서 + 룩어헤드 스케줄링. 상태(준비/전투/보스)로 트랙을 바꾸고, 진행도에 따라 템포/옥타브를 올립니다.
+### 5.2 6 Elements of Rich Synthesized BGM
 
-```js
-const BASS = [0, null, null, 0, null, null, 3, null, -2, ...]; // 반음 오프셋, null=쉼표
-const F = (semi, base = 110) => base * Math.pow(2, semi / 12); // 반음 → Hz
-// setInterval(tick, 140)로 currentTime+0.45s 앞까지 미리 예약
-```
+Avoid monotone electronic beeps by combining:
 
-공통 주의: `AudioContext`는 **첫 사용자 제스처에서 lazy 생성 + resume**, 하나만 공유, 뮤트는 재생 시점에 체크하고 `localStorage`에 저장.
+1. **Chord Progressions:** Define explicit harmony progressions per bar (`[[0, MIN7], [-4, MAJ7], ...]`).
+2. **Pads:** Layer 2 saw-wave oscillators detuned by ±6 cents through a low-pass filter.
+3. **Arpeggios:** Traverse chord notes using index patterns (`[0,1,2,1,0,2]`).
+4. **Bass:** Clean low-pass filtered root notes (kept dry).
+5. **Drums:** Sine pitch drop (Kick), bandpass noise (Snare), high-pass noise (Hi-hat).
+6. **Reverb:** Feedback delay + low-pass filter bus.
 
-### 5.0 음소거는 **선택 기능이 아니라 필수 기능**이다 ★ 모든 게임에 해당
+### 5.3 Mandatory Audio Mute Checklist
 
-소리를 넣는 순간 **끄는 방법**도 같이 만들어야 합니다. 사람들은 사무실·교실·카페·방송에서,
-또는 다른 음악을 들으며 게임을 합니다. 끌 방법이 없으면 게임을 끕니다.
+1. **Separate SFX and BGM Mutes:** Allow users to toggle music independently from sound effects.
+2. **Visible HUD Toggle:** Place mute controls prominently in the main HUD using icon + text labels.
+3. **Persist Settings:** Cache mute preferences in `localStorage`.
+4. **Keyboard Shortcut:** Bind key `M` for instant audio toggling.
+5. **Non-destructive Muters:** Check `if (muted) return;` at play time rather than closing `AudioContext`.
 
-체크리스트:
+### 5.4 Master Chain: Limiter, Panning, and Pitch Jitter
 
-- [ ] **효과음과 배경음을 따로 끈다** ★ — 가장 흔한 요구는 "BGM만 꺼줘"입니다.
-      토글 하나로 묶으면 이 요구를 들어줄 수 없습니다.
-- [ ] **버튼이 눈에 보인다** — 설정 메뉴 3단 아래가 아니라 HUD에. 아이콘만 있는 작은 버튼은
-      못 찾습니다(실측: 이미 있는데도 "만들어 달라"는 요청을 받았습니다). **아이콘 + 글자**로.
-- [ ] **꺼진 상태가 한눈에 보인다** — 🔊↔🔇 아이콘 교체 + 회색/취소선. 상태를 색만으로 알리지 말 것.
-- [ ] **localStorage에 저장** — 매 방문마다 다시 끄게 만들지 않는다.
-- [ ] **키보드 단축키**(M) — 급하게 끌 때 마우스를 찾지 않게. 전체 토글이면 충분.
-- [ ] **재생 시점에 검사**한다 — 노드를 끊거나 컨텍스트를 닫지 말고 `if (muted) return;`으로.
-      그래야 켤 때 즉시 되살아나고, 스케줄러 상태도 깨지지 않는다(켠 뒤 `sync()`로 위치만 재정렬).
-- [ ] **첫 제스처 언락과 충돌하지 않게** — 음소거 상태에서도 AudioContext는 lazy 생성하되
-      소리만 내지 않는다. 켜는 순간 곧바로 들려야 한다.
-- [ ] **전용 버튼도 못 보고 지나칠 수 있다고 가정하라** — 아이콘+글자로 눈에 띄게 만들어도
-      (위 항목) 첫 방문자·특히 심사자는 HUD 구석의 토글을 안 누르고 지나갑니다. 게임에
-      **반드시 거쳐야 하는 첫 상호작용**(온보딩 선택지 등)이 있다면, 그 클릭을 자동재생
-      정책이 요구하는 사용자 제스처로 삼아 배경음을 **기본값 켬**으로 같이 태우세요 — 전용
-      토글을 눌러 주길 기다리는 것보다 안전합니다. 단, 이미 꺼 둔 사용자의 설정을 덮어쓰지
-      않도록 이 편승은 **첫 방문자에게만 뜨는 화면**(재방문 시 다시 안 보이는 것)에서만 하세요.
+- **Master Limiter:** Connect a `DynamicsCompressor` node to prevent clipping when multiple sounds overlap.
+- **Stereo Panning:** Pipe entity X positions into a `StereoPanner` node (-0.85 to 0.85).
+- **Pitch Jitter:** Apply random pitch variation (±40–90 cents) to prevent repetitive sound fatigue.
 
-> 실측(기와장터, 2026-07-31): 심사자가 HUD의 🔇 버튼을 지나치기 쉽다는 진단 아래, "대신
-> 걸어서 보여줄까요?"를 묻는 환영 카드의 답변 클릭에 배경음 켬을 얹었습니다. 이 카드는
-> 첫 방문자에게만 뜨므로(재방문자는 온보딩 마커가 있어 카드 자체가 안 뜬다) 이미 꺼 둔
-> 설정을 덮어쓸 일이 없습니다.
+### 5.5 Cleaning Up Sustained Oscillators
 
-> 접근성 관점: 소리로만 전달하는 정보(경고·성공·실패)는 **반드시 시각 신호와 짝**을 이뤄야 합니다.
-> 음소거한 플레이어가 게임을 이해하지 못하면 그건 접근성 결함입니다.
+Sustained sounds (e.g., charge attacks) must register cleanup calls across 3 distinct termination paths:
+1. Normal key/mouse release handlers.
+2. Pause and modal UI open events.
+3. Component and scene unmount cleanup lifecycle hooks.
 
-### 5.1 "삑삑거린다"에서 "들을 만하다"로 — 합성 BGM의 최소 구성 요소
+### 5.6 Sidechain BGM Ducking
 
-단선 베이스 + 단음 멜로디만 있는 시퀀서는 아무리 패턴을 바꿔도 **전자음 삑삑**으로 들립니다.
-음악처럼 들리려면 다음 여섯 개가 필요합니다. 외부 음원을 받지 않고도 여기까지 갈 수 있습니다:
-
-1. **코드 진행(화성)** ★ 가장 큰 차이 — 마디마다 코드를 바꾸고, 모든 파트가 그 코드의
-   구성음만 쓰게 합니다. `[[0, MIN7], [-4, MAJ7], [3, MAJ], [-2, SUS4]]` 처럼 데이터로 두면
-   트랙 하나가 몇 줄입니다.
-2. **패드(지속음)** — 코드 전체를 마디 길이만큼 길게. 톱니파 2개를 ±6센트 **디튠**해 겹치고
-   로우패스를 걸면 얇은 소리가 순식간에 두꺼워집니다.
-3. **아르페지오** — 코드 구성음을 인덱스 패턴으로 훑습니다(`[0,1,2,1,0,2,...]`).
-   멜로디를 작곡하지 않아도 선율감이 생깁니다.
-4. **베이스** — 근음 중심, 리버브를 걸지 말고(dry) 로우패스로 정리.
-5. **드럼** — 킥(사인 피치 드롭 150→48Hz) · 스네어(밴드패스 노이즈) · 하이햇(하이패스 노이즈).
-   패턴은 `'k..hs..hk.khs..h'` 같은 16칸 문자열로 두면 편집이 쉽습니다.
-6. **리버브** — 컨볼버 없이 **피드백 딜레이 + 로우패스**(delay 0.19s, feedback 0.38)로 충분합니다.
-   dry/wet 버스를 나눠 파트별로 wet 여부를 정하세요. 합성음의 건조함이 사라집니다.
-
-### 5.2 합성음이 "게임 소리"가 되는 마지막 3단계 — 리미터·패닝·피치 흔들기
-
-레시피를 아무리 잘 짜도 전투가 격해지면 소리가 찢어지고, 같은 타격음이 기관총처럼 반복됩니다.
-악기를 더 만들 필요는 없습니다. 마스터 체인 세 줄이면 됩니다.
-
-| 단계 | 무엇을 고치나 | 구현 |
-|------|--------------|------|
-| **리미터** | 소리 20개가 겹칠 때의 클리핑(찌직) | `DynamicsCompressor` threshold -10 / ratio 12 / attack 0.003 |
-| **고역 셸빙** | 사각파·톱니파의 날카로움 | `highshelf` 5.2kHz, gain -5dB |
-| **스테레오 패닝** | 소리가 전부 화면 한가운데서 남 | 유닛의 필드 x좌표 → `StereoPanner` (-0.85~0.85) |
-| **피치 랜덤화** | 연타가 기계적으로 들림 | 재생마다 ±40~90 cents 흔들기 |
+When impact SFX overlap with active BGM frequencies, apply temporary sidechain ducking to dip BGM volume slightly rather than increasing SFX volume:
 
 ```js
-const wobble = (cents) => Math.pow(2, ((Math.random() * 2 - 1) * cents) / 1200);
-osc.frequency.setValueAtTime(freq * wobble(70), t0);         // 매번 미세하게 다른 음
-const pan = Math.max(-0.85, Math.min(0.85, (x - W / 2) / (W / 2) * 0.8));
-```
-
-패닝은 **이벤트에 좌표가 실려 있어야** 가능합니다. 2.4의 이벤트 방출 규약을 지켰다면 이미
-`{type, x, y, ...}` 형태일 테니 호출부에 `ev.x`만 넘기면 끝입니다 — 규약이 나중에 이자를 붙여
-돌려주는 전형적인 예입니다. BGM에도 같은 원리를 씁니다: 디튠한 패드 두 겹을 좌우 ±0.38로
-벌리면 같은 코드가 훨씬 넓게 들립니다.
-
-여기에 **스윙**(홀수 16분음표를 10~15% 늦춤)을 주면 기계적인 느낌이 줄고, 진행도에 따라
-템포를 올리면 같은 트랙으로 긴장을 만듭니다.
-
-> **외부 음원(무료/오픈 라이선스)을 쓸까?** 유혹은 크지만 대가가 있습니다: 라이선스 검증·출처
-> 기록·용량·다운로드 단계가 생기고, "모든 산출물이 AI가 읽고 고칠 수 있는 텍스트"라는 이 방법론의
-> 전제가 깨집니다. 위 여섯 요소를 갖춘 합성 BGM은 **라이선스 위험 0 · 용량 0 · 상황별 동적 변주**를
-> 공짜로 얻습니다. 그래도 넣어야 한다면 부록 B의 규칙대로 라이선스를 문서에 기록하세요.
-
-### 5.3 지속음(sustain) 효과음은 모든 종료 경로에서 회수하라
-
-5장의 레시피는 지금까지 전부 **단발**(one-shot)이었습니다 — 예약한 시간이 지나면 스스로
-끝납니다. 그런데 차지 샷·조준·시전처럼 **키를 누르고 있는 동안 유지되는 소리**는 다릅니다.
-오실레이터 하나를 살려 두고 축적량으로 음정·필터를 끌어올리는 방식이라, **멈추는 코드를
-안 부르면 화면 뒤에서 영원히 웁니다.**
-
-```js
-chargeHum.start();   // 오실레이터 하나를 켠다 (예: 140Hz, lowpass 500Hz)
-chargeHum.set(p);    // p=0~1 축적량마다 매 프레임 호출 — 음정·로우패스를 끌어올림
-chargeHum.stop();    // 반드시 아래 세 경로 전부에서 호출
-```
-
-**멈추는 지점은 하나가 아니라 셋입니다** — 하나만 놓쳐도 소리가 안 멈춥니다:
-1. **정상 해제** — 키/버튼을 뗄 때.
-2. **오버레이로 일시정지될 때** — 드래프트·퀴즈 창이 뜨면 게임 루프는 멈추지만, 진행
-   중이던 차지 상태는 그대로 남습니다. 정지 블록에 들어가기 **전에** 반드시 풀어 주세요.
-3. **컴포넌트/씬 언마운트** — cleanup 훅에서 호출. 빠뜨리면 층 이동·사망으로 씬이 통째로
-   바뀐 뒤에도 이전 씬의 허밍이 남아서 웁니다.
-
-> 실측(백층 던전): `chargeHum`(`src/lib/sound.ts`)의 실제 호출부는 놓을 때
-> (`DungeonScene.tsx:1208`)·정지 블록(`:1170`)·언마운트(`:306`) 세 곳입니다. 셋 중 하나만
-> 빠뜨려도 재현 가능한 누수였습니다. `set()`은 뮤트로 바뀌면 스스로 멎도록 만들어, 음소거
-> 토글을 네 번째 종료 경로로 따로 챙기지 않아도 됩니다.
-
-### 5.4 파일 0개로 갈 수 있는 마지막 구간 — 물리 모델과 공간
-
-5.1~5.2는 "무엇을 언제 울릴까"(레시피·마스터링)였습니다. 여기서는 **같은 코드 양으로
-소리의 급을 한 단계 올리는** 네 가지를 다룹니다. 전부 파일이 0개입니다.
-
-**① 뜯는 악기는 필터가 아니라 현을 시뮬레이션하라 (Karplus–Strong)**
-
-오실레이터에 로우패스를 아무리 씌워도 기타·가야금·하프는 "삐" 소리를 못 벗습니다. 뜯은
-현은 물리적으로 *짧은 잡음이 현 길이만큼의 지연선을 돌면서 고음부터 잃는 것*이라,
-그대로 흉내 내면 12줄로 훨씬 현답게 들립니다.
-
-```js
-function stringBuffer(ctx, hz, seconds = 1.8) {
-  const n = Math.round(ctx.sampleRate / hz);           // 지연선 = 한 주기
-  const buf = ctx.createBuffer(1, ctx.sampleRate * seconds, ctx.sampleRate);
-  const d = buf.getChannelData(0), line = new Float32Array(n);
-  for (let i = 0; i < n; i++) line[i] = Math.random() * 2 - 1;   // 뜯는 순간
-  const decay = Math.exp(Math.log(0.001) / (1.4 * ctx.sampleRate)); // -60dB까지 1.4초
-  for (let i = 0, k = 0; i < d.length; i++, k = (k + 1) % n) {
-    d[i] = line[k];
-    line[k] = (line[k] * 0.5 + line[(k + 1) % n] * 0.5) * decay;  // 평균 = 고음부터 감쇠
-  }
-  return buf;
-}
-```
-
-**음 하나당 한 번만 만들고 캐시**하세요(음높이별 Map). 만드는 비용은 그 음의 첫 연주에서만
-들고, 그 뒤로는 `BufferSource` 재생이라 사실상 공짜입니다. 같은 원리로 관악기는
-사인파에 **숨소리(밴드패스 잡음)를 한 겹** 얹으면 신디사이저에서 사람이 부는 악기로 바뀝니다.
-
-**② 컨볼루션 리버브의 임펄스 응답도 절차로 만들 수 있다**
-
-5.1의 피드백 딜레이는 가볍고 충분하지만, "같은 마당에서 나는 소리"까지 가려면 컨볼버가
-낫습니다. IR 파일을 받을 필요는 없습니다 — **지수 감쇠 잡음 + 초기 반사 몇 개**면 됩니다.
-
-```js
-for (let ch = 0; ch < 2; ch++) {
-  const d = ir.getChannelData(ch);
-  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2.8);
-  for (const [ms, g] of [[9 + ch * 2, 0.5], [23 + ch * 3, 0.34], [41 + ch * 5, 0.2]])
-    d[Math.floor(ms / 1000 * sr)] += g;      // ← 이 세 줄이 '공간'을 만든다
-}
-```
-
-초기 반사를 심는 것이 요점입니다. 매끈한 잡음만으로는 마당이 아니라 **욕실**이 됩니다.
-좌우를 몇 ms 어긋나게 두면 폭이 생깁니다. 버스 구성은 `music·sfx → 컴프레서 → 스피커`에
-같은 지점에서 `send → convolver`를 병렬로 태우는 형태가 단순합니다.
-
-**③ 자리가 있는 소리는 3D에 놓되, 귀는 카메라가 아니라 아바타에 달아라** ★
-
-모닥불·분수·기계처럼 **한 지점에서 계속 나는 소리**는 `PannerNode`에 놓으면 거리와 방향이
-공짜로 생깁니다. 함정은 리스너입니다: 3인칭 게임의 카메라는 대개 캐릭터 뒤 위쪽에 있어서,
-카메라에 귀를 달면 **모닥불 바로 옆에 서도 소리가 저 멀리서 납니다.**
-
-```js
-// 매 프레임: 위치는 아바타, 방향은 아바타가 보는 쪽
-listener.positionX.value = player.x; listener.positionZ.value = player.z;
-listener.forwardX.value = Math.sin(player.rot); listener.forwardZ.value = Math.cos(player.rot);
-```
-
-**④ 타격은 세 겹, 발소리는 시간이 아니라 거리로**
-
-게임 타격음이 시원하게 들리는 건 대개 커서가 아니라 **겹이 있어서**입니다:
-*트랜지언트*(찰나의 잡음 — "닿았다"를 알린다, 늦으면 둔해진다) + *바디*(무게) +
-*테일*(낮게 미끄러지는 여운 — 리버브가 이걸 공간으로 퍼뜨린다). 세 겹을 같은 시각에
-예약하고 각각의 길이만 다르게 두면 됩니다.
-
-발소리는 **걸은 거리를 누적**해 보폭(1.6~2m)마다 울리세요. 타이머로 울리면 벽에 막혀
-제자리걸음을 할 때도 소리가 나고, 속도가 바뀔 때 보폭이 어긋납니다.
-
-### 5.5 상태 전환 없이 압박을 들려주는 법 — 신호를 0~1 강도로 합성해 밀도만 바꿔라
-
-BGM은 보통 상태(평시/전투/보스)별로 **트랙을 통째로 갈아 끼웁니다**(phase 전환). 그런데 같은
-전투 트랙 안에서도 위기감은 계속 변합니다 — 콤보가 오르고, 체력이 깎이고, 보스 체력이
-줄어듭니다. 트랙을 더 잘게 쪼개는 대신, **여러 게임 상태를 0~1 스칼라 하나로 합성**해서
-같은 트랙 안의 타악기·저음 레이어 밀도를 실시간으로 조절하면 트랙 전환 로직은 그대로 두고도
-압박이 들립니다.
-
-```js
-// 순수 함수 — 오디오 없이도(헤드리스) 입력→출력을 그대로 단언할 수 있다
-export function deriveIntensity({ hpRatio, comboMult, bossActive, bossHpRatio, surging, rushing }) {
-  let v = (1 - hpRatio) * 0.45 + (comboMult - 1) * 0.25;
-  if (bossActive) v += 0.3 + (1 - bossHpRatio) * 0.25;
-  if (surging) v += 0.35;
-  if (rushing) v += 0.35;
-  return Math.max(0, Math.min(1, v));
-}
-// tick()마다: intensity += (target - intensity) * 0.12   ← 스무딩, 급변해도 뚝 끊기지 않음
-```
-
-- **합성 지점과 스무딩 지점을 분리하세요.** `deriveIntensity`는 게임 상태가 바뀔 때마다
-  호출해 목표값(target)만 갱신하고, 실제로 재생에 쓰는 값은 스케줄 틱마다 목표로 조금씩
-  (예: 12%씩) 다가가게 하세요. 안 그러면 콤보가 끊기는 순간처럼 값이 계단식으로 뚝뚝
-  끊깁니다.
-- **트랙 전환 로직은 손대지 마세요.** 강도는 "같은 트랙 안의 밀도"만 바꾸는 레이어이지,
-  phase 전환을 대신하지 않습니다. 두 메커니즘을 분리해야 상태 전환(트랙 A→B)과 강도 전환
-  (트랙 A 안에서 조용함↔격렬함)을 각각 독립적으로 튜닝할 수 있습니다.
-- **입력은 이미 갖고 있는 신호를 재사용하세요.** 새 계측을 만들 필요 없이, 체력비·콤보
-  배율·보스 체력비·기존 "위협 구간" 플래그처럼 이미 UI가 쓰는 값을 그대로 합성식에 넣으면
-  됩니다.
-
-> ⚠️ **헤드리스 검증의 한계**: `deriveIntensity`가 순수 함수라 입력→출력은 단언할 수 있고,
-> 오디오 노드 개수(9.2)로 "레이어가 실제로 스케줄되는가"도 셀 수 있습니다. 하지만 **잘
-> 들리는지(청감)는 사람이 들어야 압니다** — 합성이 옳아도 리듬감이 어색할 수 있다는 뜻이라,
-> 헤드리스 통과를 "다 됐다"로 착각하지 마세요.
-
-### 5.6 효과음이 배경음에 묻힌다면 볼륨을 올리지 말고 **배경음을 잠깐 비켜세워라**
-
-5.2의 리미터는 소리가 **찢어지지 않게** 할 뿐입니다. 타격음이 BGM과 같은 대역에서 겹치면
-찢어지지 않으면서 그냥 **묻힙니다.** 여기서 효과음 볼륨을 올리면 전체가 시끄러워지기만 하고,
-BGM 볼륨을 내리면 조용한 순간까지 밋밋해집니다. 답은 **효과음이 나는 그 순간에만 BGM을
-살짝 눌렀다 되돌리는 것**(사이드체인 더킹)입니다.
-
-```js
-// music 버스와 출력 사이에 게인 하나. 평소 1, 효과음이 나면 잠깐 내렸다 돌아온다.
 export function duckBgm(amount = 0.4, dur = 0.4) {
   const t = c.currentTime;
   duckGain.gain.cancelScheduledValues(t);
-  duckGain.gain.setValueAtTime(duckGain.gain.value, t); // ← 연타해도 예약이 쌓이지 않게
-  duckGain.gain.linearRampToValueAtTime(1 - amount, t + 0.04); // 내릴 땐 빠르게(자리를 낸다)
-  duckGain.gain.exponentialRampToValueAtTime(1, t + dur);      // 올릴 땐 느리게(펌핑 방지)
+  duckGain.gain.setValueAtTime(duckGain.gain.value, t);
+  duckGain.gain.linearRampToValueAtTime(1 - amount, t + 0.04);
+  duckGain.gain.exponentialRampToValueAtTime(1, t + dur);
 }
 ```
 
-- **내림은 빠르게, 복귀는 느리게.** 40ms 안에 안 내려가면 자리가 안 생기고, 0.35~0.4초보다
-  빨리 돌아오면 연타할 때 BGM이 들썩이는 게 들립니다(펌핑).
-- **연타 대비로 현재값부터 다시 그리세요.** `cancelScheduledValues` + `setValueAtTime(현재값)`
-  없이 램프만 걸면 예약이 겹쳐 게인이 튑니다.
-- **sfx가 music을 직접 부르게 하지 마세요 — 순환 의존이 됩니다.** sfx는 "등록된 더커가 있으면
-  부른다"만 알고, 배선은 2.1의 컨트롤러가 합니다. 이벤트 방출 규약(2.4)과 같은 결입니다.
-  ```js
-  // sfx: registerDucker(fn) 로 받아 두고 재생 시점에 fn?.(0.35, 0.35)
-  // main: registerDucker((amt, dur) => music.duck(amt, dur))
-  ```
+---
 
-**같은 배선으로 두 가지가 더 붙습니다.**
+## 6. Progression & Upgrade Design
 
-- **마스터 로우패스 한 개** — 기본 20kHz(사실상 통과)로 두고 상태에 따라
-  `setTargetAtTime(target, now, 0.2)`으로 서서히 닫으면 **믹스 전체의 색**이 바뀝니다.
-  5.5가 "같은 트랙 안의 밀도"라면 이건 "믹스 전체의 톤"이라, 둘은 겹치지 않고 함께 씁니다.
-- **한 소리 안에도 흐름을 주세요.** `tone(freq, …)`를 주파수 **배열**을 받는 형태로 넓히면
-  (지점마다 `exponentialRampToValueAtTime`), 레시피 수를 늘리지 않고도 기계적인 느낌이
-  줄어듭니다. 여기에 LFO 비브라토(`lfo → lfoGain → osc.frequency`)와 필터 컷오프 스윕을
-  옵션으로 얹으면 같은 26개 레시피가 훨씬 덜 삑삑거립니다.
+| Element | Description | Example A (Roguelike) | Example B (Defense) |
+|---------|-------------|-----------------------|---------------------|
+| **Rarity & Weights** | Common / Rare / Legendary odds | Common 1.0 / Rare 0.5 / Legend 0.22 | Weight increases with player skill |
+| **Synergy Tags** | Holding 2+ matching tags boosts odds ×1.35 | Offense / Survival / Utility | Class & Attribute Synergies |
+| **Evolution "Jackpots"★**| Upgrades that *change player actions* | 9-way arc spray, ricochet, explosions | Piercing shots, fire line, AoE slows |
+| **Meta-Progression** | Persistence currency retained upon death | Coins → Forge Stat Upgrades | Star Shard → Shrine Blessing |
+| **Kill Combos** | Rapid consecutive kills increase multiplier | 4-streak ×2 / 8-streak ×3 | 6-streak ×2 / 12-streak ×3 |
 
-> 실측(2026-08-05): 용사 수학 디펜스(`148a82b`)와 백층 던전(`45f0102`)에 **같은 날 같은
-> 시스템**이 들어갔습니다 — 더킹 기본값 0.35~0.4 / 0.35~0.4초, 마스터 로우패스 Q 0.7,
-> `registerDucker` 배선까지 동일합니다. 장르도 스택도 다른 두 게임(Vanilla JS · React+TS)에
-> 손대는 곳이 `sfx`·`music`·배선부 셋뿐이었다는 점이 이 기법이 이식 가능하다는 근거입니다.
+> **Key Design Lesson:**
+> Replacing minor numeric boosts (+10% Attack) with **Action-Changing Evolution Jackpots** ("Arrows now pierce 3 targets and explode") yields exponentially higher player satisfaction and engagement.
+
+### 6.1 Making Auxiliary Activities Core Gating Mechanisms
+
+Placing educational or side activities as optional side tasks results in low player engagement. Integrate them directly as **mandatory progression gates** (unit synthesis, evolution unlocks, resurrection checkpoints).
+
+### 6.2 Unifying Growth Vectors
+
+Avoid cluttering progression with duplicate growth systems (e.g., individual unit level-ups AND tier synthesis). Consolidate growth into a single, intuitive synthesis tree.
+
+### 6.3 3-Tier Synergy Evolution Trees
+
+Prevent late-game stagnation by structuring unit evolution into 3 tiers (Basic → Special → Mythic). Restrict Mythic units to specific multi-recipe combinations, providing clear long-term goals for players.
+
+### 6.4 Preventing Free Reroll Exploits
+
+Prevent players from closing and reopening quiz gates to fish for easy questions by locking the specific synthesis combination for the current prep phase upon failure, rather than penalizing player gold.
 
 ---
 
-## 6. 진행 / 업그레이드 설계
+## 7. Game Feel (Juice) & Controls Checklist
 
-| 요소 | 설명 | 예시 A (로그라이크) | 예시 B (디펜스) |
-|------|------|-----------|------------------|
-| **등급 + 가중치** | 흔함/희귀/전설 확률 | common 1 / rare 0.5 / legend 0.22 | 플레이 실력으로 확률 상승 |
-| **시너지 태그** | 같은 태그 2+ 보유 시 그 태그 확률 ×1.35 | 공격/생존/보조 | (선택) |
-| **진화 "잭팟" ★** | *숫자가 아니라 행동*을 바꾸는 카드 | 부채꼴 9연발·벽 반사·치명타 폭발 | 회전베기·관통·화상·광역 감속 |
-| **메타 진행** | 죽어도 남는 재화 → 영구 강화 | 코인 → 대장간 | 별조각 → 별의 축복 |
-| **킬 콤보** | 짧은 시간 연속 처치 시 배율 | 4연속 ×2 / 8연속 ×3 | 6연속 ×2 / 12연속 ×3 |
+Low-cost, high-impact polish features to make games feel responsive and tactile.
 
-> **가장 중요한 교훈:** 히트작 리뷰 분석 결과 "빌드가 숫자만 키우고 *플레이 방식을 바꾸는 잭팟 순간*이 없다"는 게 공통 공백이었습니다. 그래서 두 게임 모두 **행동을 바꾸는 진화/특수능력**을 최상위 매력 요소로 넣었습니다. 스탯 +10%보다 "이제 화살이 3명을 뚫는다"가 훨씬 강렬합니다.
+- [ ] **Ghost Health Bar:** Primary HP bar decreases instantly; trailing yellow bar follows after a 0.5s delay.
+- [ ] **Hit Flash:** Flash unit white + subtle scale-up upon taking damage.
+- [ ] **Combo Pop:** Spring easing (`cubic-bezier(0.2,1.6,0.4,1)`) pop-up text chips for combo streaks.
+- [ ] **Edge Screen Flash:** Red vignette pulse on base or player damage.
+- [ ] **Low HP Pulse & Heartbeat:** Synchronized screen pulse with low-frequency heartbeat audio.
+- [ ] **Floating Damage & Gold Numbers:** Numbers float upward and fade out.
+- [ ] **Range Circles & Boss Health Bars:** Standard UI indicators (range indicators, upcoming wave previews).
+- [ ] **First-Time Coach Chips:** Single-use coach tips with immediate start buttons.
+- [ ] **Shareable Result Cards:** Canvas-rendered summary card PNG generator for social sharing.
 
-### 6.0 부가 활동(학습·미니게임)은 **진행의 관문**으로 만들어라 — 옆에 두면 아무도 안 한다
+### 7.1 Centralizing Feedback Dispatchers
 
-교육 게임이나 미니게임을 곁들일 때 가장 흔한 실패: **"하면 좋은 것"으로 옆에 두는 것**입니다.
-보상을 크게 줘도 플레이어는 코어 루프만 돌립니다.
+Attach sound effects, visual popups, and toast notifications to a **centralized action queue** rather than scattering invocations across individual feature modules.
 
-실측: 수학 문제를 "풀면 골드 + 소환 확률 상승"으로 사이드 버튼에 뒀더니,
-플레이어는 **조합할 때 강제되는 문제만** 풀었습니다(그마저도 통과용). 확률표는 아무도 안 봤습니다.
+### 7.2 Keyboard-First & Predictive UI Standards
 
-교훈 셋:
-1. **관문으로 옮겨라.** 부가 활동을 *진행에 반드시 필요한 지점*(합성·해금·부활)에 붙이면
-   억지로 유도할 필요가 없습니다. 사이드 버튼은 삭제하는 게 낫습니다 — 남겨두면 UI 잡음입니다.
-2. **아무도 안 보는 정보는 지워라.** 확률표·숨은 스탯이 행동을 바꾸지 않는다면 그건 정보가
-   아니라 소음입니다. 지우면서 그 스탯에 의존한 시스템(우리 경우 '지식 레벨')도 함께 정리하세요.
-3. **실력은 난이도 선택으로 표현되게.** 관문만 두면 "정답/오답" 이분법이라 잘하는 사람이 보상받을
-   길이 없습니다. **어려운 난이도를 고르면 보상이 커지는 축**을 주세요 —
-   학년을 올리면 환급률이 15%→45%로 커지게 하니, 실력자가 스스로 어려운 문제를 고릅니다.
+1. **Keyboard Binding Standards:** Support standard navigation (Enter to confirm, Space for primary action, Esc to close/cancel, Arrow/Tab to cycle selection).
+2. **Predictive Auto-Advancement:** Automatically advance screens after displaying positive outcomes (0.8–1.2s delay). Do not auto-advance failure screens to allow players time to review errors.
+3. **Robust Input Handling:** Ensure global key listeners process primary actions even when text inputs lose focus, correctly filtering IME composition states (`ev.isComposing`).
 
-> ⚠️ 부가 활동이 주 수입원이었다면, 관문으로 옮기는 순간 **경제가 붕괴**합니다.
-> 실제로 수학 보상을 없앴을 때 숙련·중급 플레이어의 생존 웨이브가 둘 다 10으로 붙어버렸습니다
-> (실력 격차 소멸). 코어 루프 보상(처치·클리어)을 올려 총수입을 복구하고,
-> 격차는 위 3번(난이도 선택 보상)으로 다시 만드세요.
+### 7.3 Pointer Precision Media Queries
 
-### 6.0.5 성장 시스템은 **하나**로 몰아라 — 두 개면 하나는 반드시 안 쓰인다
-
-레벨(개별 강화)과 합성(등급 상승)을 **둘 다** 두면, 플레이어는 더 재미있는 쪽만 하고
-나머지는 "번거로운 잡일"이 됩니다. 실측 피드백: *"레벨은 잘 안 올리게 됨. 번거롭고 재미없음"*.
-클릭 수는 늘고 결정의 깊이는 늘지 않는 시스템은 **지우는 것이 개선**입니다.
-
-판단 기준: 그 시스템이 **선택을 만드는가, 작업을 만드는가?**
-- 레벨업(골드 → 같은 유닛 +25%)은 선택이 없습니다. 돈이 있으면 누르는 게 항상 정답.
-- 합성은 *무엇과 무엇을 합칠지* 고르게 하고, 결과가 눈에 보이게 달라집니다.
-
-→ 하나만 남기고, 없앤 쪽의 파워는 남은 축(등급 배율)에 흡수시키세요.
-
-### 6.0.6 합성 게임이 중반 이후 "애매해지는" 이유와 해법
-
-최고 등급에 도달하면 합성할 이유가 사라지고, 남는 유닛은 손해 보며 파는 쓰레기가 됩니다.
-실측한 세 가지 막다른 길과 처방:
-
-| 막다른 길 | 처방 |
-|-----------|------|
-| 최고 등급이 천장 → 목표 소멸 | **세대를 하나 더 얹어라.** 기본→특수(2세대)→**신화(3세대)**. 최상위 등급은 *레시피로만* 도달하게 하고 단순 등급업의 천장은 그 아래로 고정 |
-| 상위 유닛끼리는 조합 경로가 없음 | 2세대 결과물끼리 짝지어 3세대를 만들어라. 트리가 닫히지 않고 계속 이어진다 |
-| 등급이 안 맞아 재료가 놀고 있음 | **등급이 달라도 합성 허용**(결과 = 낮은 쪽 +1). 높은 쪽 손실이 곧 비용이라 악용 여지가 없고, "재료는 있는데 못 만든다"는 답답함이 사라진다 |
-
-여기에 **도감 + 발견 표시(✓)** 와 **결과 미리보기 툴팁**을 붙이면, 후반의 목표가 화면에
-계속 보입니다("이 둘을 합치면 저게 나온다").
-
-**규칙은 하나여야 하고, 화면에 있어야 합니다.** 실측 혼동 사례: 최상위 등급을 "레시피로만"
-도달하게 하고 등급업을 일괄 차단했더니, 플레이어가 *"신화는 어떻게 조합? 검성 2명으로 안 되는 거야?"*
-라고 물었습니다. "같은 것 2개 = 등급 UP"이라는 학습된 규칙에 예외를 만든 것이 원인입니다.
-
-- **예외 대신 일관된 축으로 표현하라.** "등급업은 최상위 직전까지만"(예외) 보다
-  **"등급 천장은 직업 세대가 정한다"**(규칙)가 이해됩니다 —
-  기본·중간 직업은 전설까지, 최상위 직업만 신화까지. 그러면 *최상위 직업 2명 등급업*도
-  자연히 허용되고(플레이어 직관과 일치), 최상위 등급의 희소성은 그대로 지켜집니다.
-- **막힌 이유를 그 자리에 쓰라.** 천장에 닿은 유닛이 있으면 조합 목록에
-  "전설은 최고 등급 — 신화가 되려면 신화 조합으로" 같은 안내를 넣습니다. 조용히 사라진
-  선택지는 버그로 읽힙니다.
-- **재료의 현재 등급을 배지로 보여라.** 결과 등급이 재료에 따라 달라지는 시스템에서
-  "왜 전설이 안 나오지?"는 재료 등급을 안 보여줘서 생깁니다.
-- **손해가 되는 조합은 제안하지 마라.** 등급이 오르지 않는 조합(캡에 걸린 경우)은
-  목록에서 빼면 플레이어가 함정에 빠지지 않습니다.
-
-⚠️ 최상위 등급은 **분포를 이봉형(bimodal)으로 만듭니다** — 도달하면 폭발적으로 오래 살고,
-못 하면 평범하게 끝납니다. 실측: 숙련 봇의 중앙값 30웨이브 / p25 10웨이브.
-이건 버그가 아니라 잭팟 설계의 특징이지만, **상한(완주율 0%)은 반드시 지키세요.**
-최상위 배율과 비용을 함께 조절해 "도달은 짜릿하지만 무적은 아닌" 지점을 찾으면 됩니다.
-
-### 6.0.7 **노력을 요구하기 전에 보상이 가능한지 검사하라** — "정답인데 허탕"은 최악의 결말
-
-부가 활동을 관문으로 만들면(6.0) 새 실패 모드가 생깁니다. **관문은 통과했는데 보상 조건이
-깨져 있는 경우**입니다. 실제로 이런 버그가 나왔습니다.
-
-> 힌트가 골드 30을 씁니다. 골드 80으로 비용 60짜리 합성 문제를 열어 힌트를 사면 50이 되고,
-> 문제를 맞혀도 "정답! 그런데 합성 골드가 부족해요"가 뜹니다. 노력의 대가가 **0**입니다.
-
-노력을 들인 뒤에 거절당하는 것은 처음부터 거절당하는 것보다 훨씬 나쁩니다. 게다가 사용자는
-원인을 모른 채 다시 시도하므로 **"같은 문제가 계속 나온다"** 같은 엉뚱한 증상으로 신고합니다.
-
-규칙 셋:
-
-1. **관문을 열기 전에 보상 가능 여부를 확인한다.** 비용이 모자라면 문제를 내지 말고
-   그 자리에서 이유를 말하세요.
-2. **관문 안에서 자원을 쓰는 선택지(힌트·재도전권)는 보상 조건을 깨뜨릴 수 없어야 한다.**
-   `gold - hintCost < rewardCost` 면 힌트를 못 사게 막고 이유를 보여 주세요.
-3. **막다른 안내를 만들지 마라.** "골드가 부족해요 — 문제를 풀어 벌어 보세요"는, 문제가
-   합성할 때만 열리고 그 합성에 골드가 필요하다면 **거짓말**입니다. 자원의 실제 출처를
-   가리키세요. 관문 구조를 바꾸면 예전 안내 문구가 조용히 순환 참조가 됩니다.
-
-> 절차 생성 콘텐츠에는 **최근 것을 기억하는 장치**도 같이 두세요. 같은 문장을 피하는 것만으로는
-> 부족하고 **직전 몇 개의 "유형"**까지 피해야 합니다 — 숫자만 다른 같은 꼴은 사용자에게
-> 그냥 같은 문제입니다. 풀이 좁은 구간을 실제로 재 보세요. 이 게임의 6학년 최저 난이도는
-> 서로 다른 문제가 193가지뿐이라 8문제 안에 중복될 확률이 4.1%였습니다.
-
-### 6.0.8 닫기·재시도가 공짜면 그 관문은 리롤 버튼이 된다 — 벌금이 아니라 잠금으로 막아라
-
-관문(6.0)을 만들면 플레이어는 그 화면을 "통과할 것"이 아니라 **비용 없는 슬롯머신**으로
-취급할 수 있습니다. 두 구멍이 함께 나야 이 문제가 생깁니다: ①닫았다 다시 열면 난이도·
-유형이 새로 뽑힌다(=공짜 리롤) ②틀려도 새 문제가 무한히 나오고, 정답률이 관문 통과
-자체에는 영향을 안 준다. 두 구멍이 겹치면 "순한 문제가 나올 때까지 껐다 켠다"가 최적
-전략이 되어 관문이 사실상 없는 것과 같아집니다.
-
-처방은 골드 벌금이 아니라 **그 행동 자체(조합)를 잠그는 것**입니다: 포기하거나 정해진
-횟수 틀리면 이번 준비 단계 동안 그 조합을 못 하게 하고, 다음 웨이브를 치러야 풀립니다.
-골드를 깎지 않는 이유는 6.0.7과 같은 논리입니다 — 벌금은 오답과 무관한 지점(합성 비용)을
-건드려 "정답을 맞혔는데 골드가 모자라요"와 같은 종류의 억울함을 새로 만듭니다. **잠금은
-그 행동이 만드는 경제 축 자체를 잠그므로, 대가와 원인이 항상 같은 자리에 있습니다.**
-
-체크리스트:
-- 닫기 버튼에 대가가 걸리면 라벨과 색을 바꿔 미리 알리세요("🏳 포기"처럼) — 누르기 전에
-  결과를 알아야 합니다.
-- 남은 시도 횟수를 상시 노출하고, 마지막 한 번은 눈에 띄게 하세요.
-- 시간 초과도 오답과 동일하게 카운트하세요 — 그러지 않으면 "가만히 있기"가 전략이 됩니다.
-- 저장/불러오기가 있다면 잠금 상태도 함께 직렬화하세요 — 안 그러면 새로고침이 우회로가
-  됩니다.
-- 봇 검증에도 같은 제한을 태우세요 — 봇이 무제한 재시도로 관문을 순삭하면 기준선이 실제
-  플레이보다 쉬워집니다.
-
-> 실측(용사 수학 디펜스, 2026-08-04): 문제창을 닫는 데 대가가 없어 "순한 문제가 나올
-> 때까지 껐다 켠다"가 관측됐습니다. 포기 또는 3회 오답(`MATH_TRIES = 3`) 시 그 조합을
-> 준비 단계 동안 잠그는 것으로 막고, 잠금 집합을 저장 파일에 포함시켜 새로고침 우회도
-> 차단했습니다. 밸런스 봇도 같은 3회 제한과 잠금을 그대로 밟습니다.
-
-### 6.0.9 도움을 사는 것이 **포기하는 것**이 되면 아무도 안 산다 — 계단으로 쪼개고, 어려울수록 싸게
-
-관문(6.0)에 힌트·도움 같은 유료 선택지를 달 때 흔한 설계가 **한 덩어리 힌트**입니다.
-풀이 방법과 정답의 실마리가 한 번에 나오므로, 사는 순간 문제가 사실상 끝납니다.
-그러면 플레이어에게 힌트 구매는 도움이 아니라 **포기 버튼**이고, 자존심이 걸린 관문에서는
-아무도 안 누릅니다. 여기에 값이 난이도와 무관하게 고정이면 문제가 겹칩니다 —
-**도움이 가장 필요한 자리에서 도움이 가장 비싸집니다**(벅찬 문제일수록 그때까지 모은 자원이
-적기 때문입니다).
-
-처방은 둘입니다.
-
-**① 도움을 계단으로 쪼개고, 앞 칸은 보상을 살려 두세요.**
-
-| 단계 | 주는 것 | 보상 |
-|---|---|---|
-| ① 접근법 | 어디서부터 손대는지(풀이 방법) | **그대로 살아 있음** |
-| ② 실마리 | 정답의 형태(자릿수·맨 앞 숫자) | 사라짐 |
-
-핵심은 **①만 보고 스스로 풀어냈다면 "한 번에 맞힘"으로 친다**는 것입니다. 보상·속도
-보너스·수집 재화가 그대로 남아야 "조금만 도와줘"가 가능해지고, 그래야 끝까지 붙어 봅니다.
-
-**② 값은 난이도와 반비례시키세요.** 어려운 문제일수록 싸집니다. 정해진 횟수 이상 틀리면
-전 단계를 무료로 여세요 — 그 지점의 플레이어는 이미 충분히 지불했습니다.
-
-- **구현 캐빗**: 생성기가 풀이 문자열 끝에 실마리를 붙여 두는 습관이 있으면(전략 + 첫
-  숫자), 단계를 쪼개는 쪽에서 **그 꼬리를 떼어 내야** 합니다. 같은 함수로 만든 문자열을
-  쓰면 정확히 일치하므로 안전하게 잘리고, 없으면 그때 만들면 됩니다. 생성기를 고치는
-  것보다 소비처에서 자르는 편이 다른 소비처를 안 깨뜨립니다.
-- 이 규칙은 6.0.7 규칙 2와 **함께** 가야 합니다 — 계단을 만들었어도 힌트 값이 보상 조건을
-  깨뜨릴 수 있으면 여전히 "정답인데 허탕"이 납니다.
-
-> ⚠️ 계단이 의미가 있으려면 ①이 실제로 **풀 수 있게 만드는 정보**여야 합니다. ①이
-> 장식이면 모두가 ②까지 사고, 단계를 나눈 것이 그냥 값을 두 번 받는 일이 됩니다.
-
-> 실측(용사 수학 디펜스 `355d038`, 2026-08-04): 힌트 하나에 풀이법과 정답 첫 숫자가 같이
-> 들어 있어 "힌트를 사는 것 = 포기하는 것"이었고, 값도 난이도와 무관하게 30 고정이었습니다.
-> 두 단계로 쪼개고 값을 ⭐⭐ 30 · ⭐⭐⭐ 20 · ⭐⭐⭐⭐ 15 · ⭐⭐⭐⭐⭐ 10 으로 뒤집었으며,
-> 두 번 틀리면 두 단계 다 무료입니다(`FREE_HINT_AFTER`). 생성기들이 전략 끝에 붙여 두던
-> 실마리(`digitHint`)는 `src/math.js`에서 떼어 냅니다. 검증은 브라우저 실조작이었습니다 —
-> lv4 관문에서 15골드로 ①(→`usedHint` 유지) → 15골드로 ②(→`usedHint` 전환·버튼 잠금),
-> 두 번 틀린 뒤에는 두 단계 모두 "(무료!)"로 바뀌고 골드 변화 0.
-
-### 6.1 한 축이 지배할 때 — 열등한 선택지에 *종류가 다른* 결정력을 줘라
-
-한 스탯(사거리·이동속도·범위 같은 **커버리지** 계열)이 승패를 지배하면 나머지 선택지가 죽습니다.
-해결책은 지배 스탯을 깎는 게 아니라, 불리한 쪽에 **다른 종류의 강함**을 주는 것입니다.
-
-| 열등한 축 | 주는 보상 | 실제 적용 |
-|-----------|-----------|-----------|
-| 사거리 짧음 | **폭발적 단일 화력**(치명타) | 검사 30%·2.5배 → 큰 숫자가 터지는 쾌감 |
-| 사거리 짧음 | **군중 제어**(적을 멈춘다) | 수호병 방패 장벽 = 킹덤러시 병영 길막. 굽이길에서 7마리 동시 정지 |
-| 낮은 DPS | 아군·본진을 살리는 유틸 | 처치 시 본진 회복 |
-
-**CC(정지·기절)를 줄 때는 반드시 상한을 함께 설계하세요** — 그냥 강력하면 게임이 무너집니다:
-1. **보스 저항**(정지 시간 ×0.35) — 보스전이 CC로 스킵되지 않게
-2. **재적용 면역**(정지 후 2~3초) — 같은 유닛을 여럿 겹쳐 **영구 정지**하는 것을 원천 차단
-3. 이건 하향이 아니라 **설계적 상한**이라, 한 명만 쓸 때의 강함은 그대로 유지됩니다
-
-**정보 표시도 밸런스의 일부입니다.** 지배 스탯이 있다면 그 값을 **카드에 직접·색등급으로**
-보여주고(근접/중거리/장거리/초장거리), 호버 툴팁에 **초당 기대 피해**처럼 비교 가능한 파생
-수치를 넣으세요. 플레이어가 "사거리가 짧다 = 대신 이런 강점"을 읽을 수 있어야 비대칭 설계가
-작동합니다. 능력 아이콘(💥치명타 🛡️정지)을 카드에 배지로 달면 한눈에 역할이 구분됩니다.
-
-⚠️ 능력을 추가하면 **기존 스탯에서 그만큼 빼세요.** 치명타+장벽을 넣자 숙련 플레이어 생존이
-14→18웨이브로 느슨해졌고, 기본 공격력을 되돌려 "치명타가 화력의 원천"이 되게 재조정해
-15웨이브로 맞췄습니다.
-
-### 6.2 시한부(휘발) 강화 카드 — 정확히 되돌리려면 소프트 캡을 피하라
-
-"지금 당겨 쓸까, 아껴서 다른 카드를 기다릴까"라는 새 트레이드오프를 만들고 싶다면, 즉시
-아주 강력하지만 몇 판(층·웨이브) 뒤 **자동으로 사라지는** 카드가 잘 통합니다. 진화/합성
-잭팟(6.0 위 표)이 *영구·조건부* 축이라면, 이건 *즉시·시한부* 축으로 반대편을 채웁니다.
-
-문제는 대부분의 스탯 시스템이 픽마다 `apply(s)`를 **누적 적용**하는 구조라, 개별 카드 하나만
-나중에 정확히 빼내기가 일반적으로 불가능하다는 점입니다. 특히 소프트 캡을 타는 스탯
-(`value += (CAP - value) * 0.15`, → 3.5)은 **그 시점의 누적값에 비선형으로 의존**하므로,
-사이에 다른 카드를 몇 장 더 집었는지에 따라 "빼는 양"이 매번 달라집니다.
-
-- **소프트 캡과 무관한 고정 수치만 시한부 카드에 씁니다.** `damage += 40`처럼 상수를 더하고,
-  만료 시 같은 상수를 그대로 뺍니다. 덧셈·뺄셈은 결합·교환 법칙이 성립하므로, 사이에
-  다른 카드를 몇 개 더 집어도 항상 정확히 상쇄됩니다.
-- **`apply`/`revert`를 데이터에 쌍으로 박아 두세요.** 카드 정의 자체가 "이 카드의 정확한
-  역연산은 이것"이라는 증거가 되고, 나중에 값을 바꿔도 둘이 함께 바뀝니다.
-- **만료 판정은 흩어진 이벤트가 아니라 하나의 공통 상태 변화로 묶으세요.** 층 전환이
-  포털·역류·건너뛰기·체크포인트 부활 등 여러 경로로 일어난다면, 그 경로마다 훅을 심는
-  대신 **결국 전부가 바꾸는 값 하나**(예: 현재 층 번호)의 변화를 감시하는 편이 빠짐이
-  없습니다.
-- **지급 경로가 여러 개(드래프트·보물·보스·상인 등)를 공유한다면, 획득 시점 기록도 그
-  공유 지점 하나에 심으세요.** 지급 경로마다 따로 인라인으로 스탯을 적용하는 곳이 있다면
-  그곳부터 놓치기 쉽습니다 — 실제로 하드코딩된 지급 경로 두 곳을 놓칠 뻔했습니다.
-- **가중치는 희귀도와 분리하세요.** 시한부 카드는 "귀하다"는 인상을 주려면 최상위 희귀도보다
-  낮은 고정 확률을 쓰고, 태그 시너지 가산도 받지 않게 하세요 — 몇 판 뒤 사라질 카드까지
-  시너지가 밀어주면 드래프트가 과하게 흔들립니다.
-
-> 실측(백층 던전, 2026-07-29): 공격력 +40·연사 +2.5를 3층 뒤 소멸시키는 카드 2종을
-> `{ apply, revert }` 쌍 + `expiresIn`으로 구현했습니다. 만료는 `floorNo` 변화 하나로
-> 포털·역류·찢어진 페이지·체크포인트 부활을 전부 커버했고, 가중치는 전설(0.22)보다 낮은
-> 고정값(0.15)을 별도로 줬습니다. **한계**: 하드런(최소 플레이) 회귀 표본에서는 픽률이
-> 낮아 카드가 뽑힌 흔적 자체가 안 보였습니다 — "회귀 없음"까지만 확인됐고, 실제 픽률이나
-> 만료 순간의 체감(강해졌다가 훅 약해지는 것)은 사람형 프로필로 별도 실측이 필요합니다.
+Detect mobile touch input using `matchMedia('(pointer: coarse)')` instead of User-Agent string parsing. Unify virtual joystick rendering and UI hint text under a single detection constant.
 
 ---
 
-## 7. 게임필(Juice) 체크리스트
+## 8. AI Collaboration Prompt Patterns
 
-거의 공짜지만 체감 품질을 크게 올리는 것들. 새 게임에 그대로 옮기세요.
+| Pattern | Example Prompt | Value & Rationale |
+|---------|----------------|-------------------|
+| **Symptom-First** | "Movement feels unresponsive in late waves — reduce increments or flatten curve." | Delegates root-cause analysis & resolution to AI. |
+| **Autonomous Delegation** | "Act as a reviewer and identify missing features to add to the game." | Allows AI agents to proactively discover mini-maps, combos, and polish. |
+| **Competitor Analysis** | "Extract key fun factors from competitor reviews and identify what our game lacks." | Generated the core concept of Action-Changing Evolution Traits. |
+| **Reference Porting** | "Reference Project X to execute a complete graphics/sound quality pass." | Ports battle-tested implementation patterns across tech stacks. |
+| **Rules Promotion** | "Add this architecture constraint to CLAUDE.md to enforce it continuously." | Preserves design rules across context resets and session boundaries. |
+| **Background Scheduling**| "Scout daily market trends, open-source repos, and hackathon projects every morning." | Promotes one-off tasks into **continuous daily background loops**. |
+| **Sequential Processing**| "Execute steps sequentially, validating each change before moving on." | Prevents overlapping failure modes and enables isolated regression testing. |
+| **Multi-Agent Audit** | "Audit all UI pathways across N parallel subagents; apply fixes only after cross-falsification." | Eliminates false positives through cross-verification of agent audits. |
 
-- [ ] **잔상 체력바** — 앞 바는 즉시 줄고, 뒤 노란 바가 0.5s 지연으로 따라옴 → 잃은 양이 보임
-- [ ] **히트 플래시** — 피격 유닛을 흰색으로 틴트 + 살짝 확대
-- [ ] **콤보 팝** — 스프링 이징(`cubic-bezier(0.2,1.6,0.4,1)`)으로 튀어나오는 칩
-- [ ] **화면 가장자리 플래시** — 본진/플레이어 피격 시 붉은 비네트
-- [ ] **저체력 맥동 + 심장박동음**
-- [ ] **떠오르는 데미지/골드 숫자**
-- [ ] **사거리 원·다음 웨이브 미리보기·보스 체력바** (장르 표준 UI를 빠뜨리지 않기)
-- [ ] **첫 실행 코치 칩** (1회성, `localStorage`) + "바로 시작" 버튼
-- [ ] **기록 카드 PNG** (캔버스로 그려 공유/다운로드)
+### 8.1 Preserving Text-Based Proofs (Terminal SVGs over Screenshots)
 
-### 7.1 피드백은 개별 호출부가 아니라 **공용 관문 한 곳**에 매달아라
-
-효과음·진행 표시·토스트를 "필요한 곳마다" 부르면, 새 기능을 넣을 때마다 잊습니다.
-그리고 잊힌 곳은 조용히 **반응 없는 화면**이 됩니다. 코드에 이미 모든 행동이 지나가는
-길목(액션 디스패처, 명령 큐, 전송 큐)이 있다면 **거기 한 곳**에 매다세요.
-
-```js
-// 모든 쓰기가 지나는 직렬화 큐 — 여기 하나에 소리와 진행 칩이 달려 있다
-export function queueTx(fn, silent = false) {
-  bumpPending(+1);
-  const run = chain.then(fn, fn).finally(() => bumpPending(-1));
-  if (!silent) run.then(sfxSent, sfxFail);   // 성공은 올라가고 실패는 내려간다
-  return run;
-}
-```
-
-그러면 **나중에 추가되는 기능이 피드백을 공짜로 얻습니다.** 대신 규율이 하나 필요합니다 —
-
-> **자동으로 나가는 것은 소리를 내지 않는다.** 하트비트·자동 저장·백그라운드 동기화처럼
-> 사람이 누르지 않은 동작에 같은 소리를 붙이면 게임이 몇 초마다 삑삑거립니다.
-> 공용 관문에 `silent` 스위치를 두고, 자동 경로만 그것을 켜세요.
-
-**한 가지 더 — 즉각 반응과 사실 확인을 분리하세요.** 결과가 네트워크/서버/체인에서
-오는 게임이라면, 버튼을 누른 *그 프레임*에 섬광·흔들림·소리를 내보내고 **숫자는 확정된
-뒤에** 띄웁니다. 반응은 즉시라 손맛이 살고, 표시되는 값은 언제나 진짜입니다.
-
-### 7.1.5 매 프레임 다시 그리는 HUD의 함정 — 애니메이션이 재시작해 글자가 떨린다
-
-게임 루프에서 HUD 갱신 함수를 매 프레임 부르는 것은 자연스럽습니다. 그런데 그 함수 안에서
-**애니메이션 클래스를 remove→reflow→add** 하면(콤보 칩의 "튀어오르기" 같은 것), 초당 60번
-애니메이션이 처음으로 되돌아가 **글자가 계속 떨리고 겹쳐 보입니다.** 레이아웃 스래싱도 함께 옵니다.
-
-```js
-// 나쁨: 매 프레임 pop 재시작 → 영구 진동
-el.textContent = `콤보 ${n}`;
-el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
-
-// 좋음: 값이 바뀔 때만 그리고, 애니메이션은 '의미 있는 전이'에서만
-if (this._n !== n) { this._n = n; el.textContent = `콤보 ${n}`; }
-if (this._mul !== mul) { this._mul = mul; restartPop(el); }   // 배율이 오른 순간만
-```
-
-같은 원리가 **월드에 뜨는 플로팅 텍스트**에도 적용됩니다. "처치마다 콤보 배율을 띄우기"는
-분대가 한꺼번에 죽는 순간 같은 문자열 수십 개가 겹쳐 읽을 수 없게 됩니다. **상태를 알리지 말고
-전이를 알리세요** — 배율이 x1→x2로 바뀌는 그 한 번만 띄우면 충분합니다.
-
-> 규칙: **HUD는 값 비교로 가드하고, 애니메이션은 전이에만 붙인다.**
-> 매 프레임 호출되는 함수에 `classList.remove/add` 애니메이션이 있으면 그건 거의 항상 버그입니다.
-
-### 7.2 조작은 키보드 우선 + UI는 예측형
-
-원칙 둘: **마우스는 옵션이다 — 키보드만으로 전 기능이 되게 하라.** 그리고
-**다음 행동이 하나뿐이면 그 UI를 없애고 자동으로 진행하라.**
-
-표준 게임 키 문법(다른 게임들이 이미 가르쳐 놓은 것)을 그대로 쓰세요:
-Enter=확인/진행 · Space=그 화면의 주 행동 · **Esc=어디서든 한 번에** 취소/닫기 ·
-Tab·화살표=대상 순환(유닛 고르기 → 위치 고르기) · 숫자키=메뉴 직접 선택 ·
-이니셜 단축키(S 소환, U 강화). 단축키는 **버튼 라벨에 상시 표기**하고 화면 하단에
-한 줄 키 안내를 두면 별도 도움말 화면이 필요 없어집니다.
-
-**예측형 UI 3규칙**
-1. **다음 행동이 하나뿐이면 자동 진행** — 마지막 조합을 마치면 "닫기"를 누를 필요 없이
-   잠시 후 스스로 닫힙니다(취소 토큰으로 관리 — 사용자가 먼저 행동하면 무효화).
-   이건 **닫기에만 해당하는 게 아닙니다.** "다음 문제", "계속 조합" 같은 진행 버튼도
-   선택지가 아니라 그냥 한 번 더 누르라는 요구입니다. 결과를 잠깐(0.8~1.2초) 보여 준 뒤
-   알아서 넘어가세요 — 만들어진 결과물을 눈으로 볼 시간만 주면 됩니다.
-   다만 **실패는 자동으로 넘기지 마세요.** 오답 화면은 정답을 읽을 시간이 필요합니다.
-   자동 진행을 넣을 때 같이 묶어야 하는 세 가지가 있습니다.
-   - 기다리는 중 Enter는 **"닫기"가 아니라 "지금 바로"** 여야 합니다. 버튼 표시 여부로
-     다음 행동을 판정하고 있었다면, 버튼을 없앤 순간 Enter가 창을 닫아 버립니다.
-   - Esc·창 닫기는 예약을 **취소**해야 합니다.
-   - 진행 함수 진입 시 예약을 **무효화**하세요. 안 그러면 타이머가 한 번 더 터져
-     문제를 하나 통째로 건너뜁니다.
-2. **반복 루프는 원버튼** — 문제 풀기·조합 같은 반복은 응답 후 **Enter/Space 한 번**이
-   "다음"이 되게. 연쇄가 끊기면 1번 규칙으로 자동 종료.
-3. **불가능한 행동은 회색 버튼 대신 이유를 보여준다** — "같은 등급 필요"처럼.
-   되는 것만 글로우로 강조하면 시선이 알아서 흐릅니다.
-
-**"되돌리기 강요" 제거** — 가장 큰 불편은 목표를 이루려고 *중간 단계를 억지로 거치는* 구조입니다
-(배치한 유닛을 옮기려면 회수→재배치, 강화하려면 회수→강화→배치).
-규칙: **"A를 하려면 먼저 B를 취소해야 한다"가 보이면 A를 직접 지원하라.**
-
-- 배치된 대상도 **제자리에서** 이동/강화/합성 가능하게 (별도 모드 없이 같은 선택 흐름에서)
-- 합성 결과는 **재료가 있던 자리를 물려받게** — 결과가 인벤토리로 튀면 다시 배치해야 한다
-- 재료가 여럿 배치돼 있었다면 **더 좋은 쪽(레벨·위치 가치) 자리**를 자동 선택
-- 파괴적 동작(회수/판매)은 **우클릭 같은 즉시 경로**를 주기
-- 재료 후보를 셀 때 **인벤토리만 보지 말고 배치된 것까지 합산** — 안 그러면
-  "분명 2명인데 합성이 안 뜬다"가 됩니다
-
-**구현 디테일(놓치기 쉬운 것)**: 모달 열리면 입력창 autofocus · 입력창의 Enter는
-`stopPropagation()`으로 전역 핸들러와의 이중 동작 차단 · 버튼 클릭 직후 `blur()`
-(포커스가 남아 다음 Space에 재발동하는 고전 버그) · **한글 IME 자판 매핑**(`ㄴ→S`, `ㅔ→P`) ·
-Space/Tab/화살표는 `preventDefault()`로 스크롤·포커스 이동 차단.
-
-### 7.2.1 주 행동은 **포커스와 무관하게** 받아라 — "입력창에만 달린 Enter"의 함정
-
-바로 위에서 권한 `stopPropagation()`에는 짝이 있습니다. 입력창의 Enter만 제출로 연결하고
-전역 핸들러는 모달일 때 그냥 `return` 하면, **포커스가 입력창을 벗어난 순간 Enter가 죽습니다.**
-
-```js
-if (ui.isMathOpen()) {
-  if (isAnswered() && key === 'Enter') { advance(); return; }
-  return;            // ← 여기. 아직 답을 안 냈을 때 Enter가 아무 일도 안 한다
-}
-```
-
-포커스는 생각보다 쉽게 빠져나갑니다 — 힌트·확인 버튼을 한 번 눌렀거나, 모달 배경을
-클릭했거나, 토스트가 떴거나. 사용자 입장에서는 **"답을 다 썼는데 Enter가 안 먹는다"**
-이고, 재현이 들쭉날쭉해서 버그 리포트도 "가끔 안 넘어가요"로 옵니다.
-
-규칙: **그 화면의 주 행동은 이벤트가 어디서 왔든 처리한다.**
-
-```js
-// 전역 핸들러에도 제출을 붙인다. 입력창이 먼저 처리했다면
-// stopPropagation 때문에 여기 오지 않으므로 이중 제출은 생기지 않는다.
-if (!isAnswered() && key === 'Enter' && !ev.isComposing) { submit(input.value); input.focus(); }
-```
-
-- `ev.isComposing` 검사는 필수입니다. 한글·일본어 IME에서 **조합을 확정하는 Enter**가
-  제출로 새면 사용자는 자기가 안 누른 답이 나갔다고 느낍니다.
-- 모달 안을 클릭하면 입력창으로 포커스를 되돌리세요(버튼 클릭은 제외).
-- 검증할 때는 `element.dispatchEvent` 말고 **`document.dispatchEvent`로 쏘세요.**
-  요소에 직접 쏘면 요소의 리스너가 항상 잡아서 이 버그가 영영 재현되지 않습니다.
-  실제 사용자의 키 이벤트는 `activeElement`에서 출발해 위로 버블합니다.
-
-### 7.2.2 "가만히 두면 아무 일도 안 일어나는 화면"을 하나도 남기지 마라
-
-예측형 UI를 성공 경로에만 적용하기 쉽습니다. 정작 위험한 건 **실패 경로**입니다.
-오답·시간 초과 화면에 아무 예약이 없으면, 모달이 열린 동안 시뮬레이션이 멈추는 구조에서는
-**게임 전체가 무기한 정지**합니다. 시간 초과는 사용자가 자리를 비웠을 확률이 가장 높은
-상태라 더더욱 그렇습니다.
-
-실패도 자동으로 넘기되 **읽을 시간은 주세요**(2~3초). 성공(0.8초)보다 길게 잡는 이유는
-"정답은 30이에요"를 읽어야 하기 때문입니다.
-
-> 화면을 전부 열거해 표로 만드세요 — 상태 / 다음 행동 / 자동인가 / 몇 초. 표에서 "자동" 칸이
-> 빈 줄이 곧 멈춘 화면입니다. 이 게임은 그렇게 세어 보고 나서야 정답 종료 상태 넷 중 **셋**이
-> 사용자가 눌러야만 빠져나오는 막다른 길이라는 걸 알았습니다.
-
-**같은 층에 알림을 띄우세요.** 전체화면 모달(z-index 50) 위에 토스트(z-index 7)를 띄우고 있었고,
-그래서 "힌트를 사면 골드가 모자라요" 같은 **가장 중요한 안내가 아무에게도 안 보였습니다.**
-검증할 때 `elementFromPoint` 는 `pointer-events: none` 요소를 건너뛰므로 그대로 쓰면 안 됩니다 —
-잠깐 `auto` 로 바꿔 재거나 픽셀을 직접 찍으세요.
-
-⚠️ **밸런스 주의**: 편의성은 자원 낭비를 없애므로 **곧 파워 상승**입니다. 배치 유닛을
-합성 재료로 허용했더니 숙련 플레이어 생존이 11→22웨이브로 두 배가 됐습니다.
-편의성 패치 뒤에는 반드시 봇으로 재측정하고 비용/곡선을 다시 조이세요.
-
-### 7.2.3 터치 기기 감지는 UA 스니핑 대신 `matchMedia('(pointer: coarse)')`로
-
-키보드 안내("W·A·S·D 키")를 터치 기기에도 그대로 보여주면 조작 방법을 못 찾는
-사용자가 생깁니다. User-Agent 문자열을 파싱하는 대신 **입력 장치의 정밀도를 직접
-묻는 미디어 쿼리**로 분기하세요 — 터치 노트북·2-in-1처럼 UA만으로는 애매한 기기도
-실제 입력 방식 기준으로 정확히 잡히고, 브라우저 스푸핑에도 흔들리지 않습니다.
-
-```js
-const TOUCH = window.matchMedia('(pointer: coarse)').matches;
-hint = TOUCH ? '왼쪽 아래 조이스틱으로 움직입니다' : 'W·A·S·D 키로 움직입니다';
-```
-
-두 프로젝트가 서로 다른 시점에 독립적으로 같은 판정에 도달했습니다: 백층 던전
-(`dungeon100`, `DoorRunScene.tsx`)은 두 문 달리기의 좌/우 조작 존 인디케이터를 이
-조건으로만 띄우고, 기와장터(`giwa-village`, `QuestLog.tsx`·`Welcome.tsx`)는 온보딩
-퀘스트 힌트와 "시연 중단은 ESC" 안내를 터치용 문구("조이스틱으로", "건너뛰기
-버튼으로")로 갈아 끼우는 데 같은 조건을 썼습니다.
-
-**가상 컨트롤을 띄우는 조건과 안내 문구를 바꾸는 조건을 하나로 통일하세요.** 둘이
-어긋나면 "조이스틱은 떠 있는데 안내는 키보드용"이라는 불일치가 생깁니다 — 판정을
-한 상수로 뽑아 두 곳(컨트롤 렌더링 여부·문구 분기)이 같은 값을 읽게 하면 막힙니다.
-
-### 7.2.4 폰에서 불편한 것이 그래픽이 아닐 때 — 거리·가림·오차·밀림을 함께 보라
-
-"폰에서 답답하다"는 말을 들으면 4.5(장식 접기)부터 떠올리게 되지만, **집는 곳과 놓는 곳이
-있는 조작**(배치·드래그·조합)에서는 원인이 그래픽이 아닌 경우가 많습니다. 네 가지가 겹쳐
-있고, 하나만 고치면 티가 안 납니다.
-
-**① 거리 — 고르는 곳과 놓는 곳이 한 화면에 같이 있는가.**
-세로로 쌓이는 폰 레이아웃에서는 데스크톱의 좌/우 두 열이 위/아래로 풀리면서 그 사이에
-관계없는 패널(골드·설정·난이도)이 통째로 끼어듭니다. "카드 고르고 발판 누르기"가 스크롤
-왕복이 되는 순간 조작이 아니라 작업이 됩니다.
-
-```css
-/* DOM 구조는 그대로 두고 세로 순서만 재배열 — 데스크톱 두 열 배치는 한 줄도 안 바뀐다 */
-@media (max-width: 720px) {
-  .left, .right { display: contents; }
-  .field { order: 1; } .summon { order: 2; } .bench { order: 3; }
-}
-```
-
-**② 가림 — 놓으려는 자리를 UI가 덮고 있는가.** 작은 전장에서는 버튼·칩이 차지하는 비율이
-급격히 커집니다. **배치 중에만 흐리게(0.16) + 클릭 무시**로 비켜세우세요. 숨기지 말고
-흐리게 두는 편이 낫습니다 — 사라지면 "없어졌다"로 읽히고, 흐리면 "지금은 발판"으로 읽힙니다.
-어차피 그 순간에는 누를 수도 없는 버튼입니다.
-
-**③ 오차 — 손가락은 마우스만큼 정확하지 않다.** 터치일 때만 히트 반경을 넉넉히 키우세요
-(실측 배수 ×2.4 — 화면상 18px → 28px). 렌더는 그대로 두고 **판정만** 키우는 것이 핵심입니다.
-
-**④ 밀림 — 고치려던 문제를 새로 만들지 마라.** ⚠️ 안내 바를 "배치할 때만" 띄웠더니 카드를
-누르는 순간 아래 목록이 70px 밀려 **방금 누른 카드가 손가락 밑에서 도망갔습니다.** 상태에
-따라 나타났다 사라지는 요소를 조작 경로 위에 두지 마세요. **늘 같은 자리를 차지하고 문구만
-바꾸면**(레이아웃 밀림 0px) 같은 안내를 공짜로 줍니다.
-
-> 실측(용사 수학 디펜스 `d7086ac`, 2026-08-05): 전장↔벤치 간격 265px → 73px, 전장
-> 374×234에서 웨이브 버튼 17%·별지기 칩 16%가 하필 아래쪽 발판 위를 덮고 있었습니다.
-> **넓은 화면에서는 이 안내 바를 아예 띄우지 않습니다** — 전장이 `flex:1`이라 바가 생기면
-> 전장이 줄고 캔버스가 다시 잡히면서 화면이 튀고, 애초에 벤치가 바로 옆에 보여 안내가
-> 필요 없습니다. 폰용 처방을 데스크톱에 그대로 켜 두지 마세요.
-
-### 7.3 연출이 **게임의 정체성을 덮어쓰면** 걷어내라 — 뽑되, 뽑는 걸 보여 주지 마라
-
-이 장은 내내 "더하라"고 말하지만, 상한이 하나 있습니다. **무작위를 눈앞에서 굴려 보이는
-연출**(룰렛·슬롯·카드 뒤집기)은 다른 연출과 성질이 다릅니다 — 손맛을 더하는 대신
-**장르 인상 자체를 바꿉니다.** 수학 문제를 푸는 게임에 룰렛을 달았더니 "수학 게임"이
-아니라 "뽑기 게임"처럼 보였습니다. 프레임 예산도 버그도 아니고, 게임이 무엇에 관한
-것인지가 바뀐 것입니다.
-
-판단 기준은 취향이 아니라 이것입니다: **그 연출을 처음 보는 사람이 게임을 뭐라고
-부르겠는가?** 대답이 코어 루프와 다르면 그 연출이 이긴 것이고, 걷어낼 차례입니다.
-
-- **무작위를 없애지 말고 *보여 주기*만 없애세요.** 확률 표·배수·보상은 그대로 두고,
-  결과만 배지 한 번 튕기는 정도로 알립니다. 재미의 원천(변덕)은 그대로 남습니다.
-- ★ **화면을 걷어내도 데이터 모델은 남기세요.** 그래야 그 연출에 붙여 두었던 **불변식
-  검사가 계속 유효합니다**(확률 합·대량 표본 분포·난수 소비 횟수). 연출과 함께 검증
-  자산까지 지우면, 걷어낸 자리가 다음에 조용히 망가집니다.
-- **걷어낼 때는 죽은 참조를 찾으세요.** 사라진 배열·DOM을 아직 읽는 코드가 남아 예외를
-  던집니다. 이때 먼저 알려 주는 것이 데모입니다(9.7 — 데모는 살아 있는 회귀 테스트).
-- **연출을 줄이는 김에 안내는 오히려 늘리세요.** 결과가 불리하게 나온 경우(환급 ×0.5)에
-  이유를 적어 주는 것은 연출이 아니라 공정함입니다. 깎이는 쪽도 왜인지 알아야 합니다.
-
-> ⚠️ 이건 "juice를 줄여라"가 아닙니다. 7.1~7.2의 피드백은 코어 루프를 **더 잘 읽히게**
-> 만들지만, 뽑기 연출은 코어 루프를 **가립니다.** 구분선은 화려함의 양이 아니라
-> "그 연출이 무엇에 관한 게임인지를 다시 말하고 있는가"입니다.
-
-> 실측(용사 수학 디펜스): 세 장을 펼치고 불빛을 돌리는 룰렛을 `546fb3d`(2026-08-03)로
-> 넣었다가 **같은 날 `318c861`로 걷어냈습니다.** 원래 목적은 난이도 선택의 결정 비용을
-> 없애는 것이었는데, 뽑는 과정이 요란해 정체성을 덮었습니다. 지운 것은 카드 화면 마크업 ·
-> 스핀/착지/스킵 로직(`src/ui.js` −140줄) · 카드 CSS 79줄 · 카드 전용 키 분기 · 데모 API
-> 3개이고, 확률 표는 그대로 남겨 **룰렛 불변식(확률 합 · 6만 번 분포 · 2문제 관문 빈도 ·
-> 난수 1회)이 계속 통과**합니다. 밸런스 기준선 9종도 변동 없음. 걷어내는 동안 이미 없어진
-> `modal.cards`를 참조하던 환급 문구가 예외를 던지고 있었고, 데모 콘솔에서 잡혔습니다.
+Avoid committing binary screenshots (PNG/GIF) for test proofs. Instead, render CLI stdout directly to **terminal SVG vector files**. This reduces file sizes by ~1000x (12KB SVG vs 11.8MB GIF) and keeps verification proofs reviewable via `git diff`.
 
 ---
 
-## 8. AI 협업 프롬프트 패턴 (실전 지시 형태)
+## 9. Automated Verification Harness
 
-| 패턴 | 지시 예 | 왜 효과적인가 |
-|------|---------|---------------|
-| **증상만 말하기** | "이동이 뒤로 갈수록 불편해 — 증가량을 1/10로 하거나, 뒤로 갈수록 증가폭을 줄이거나." | 원인 진단을 AI에 맡김. 증상 + 후보 2개면 충분 |
-| **위임형** | "이제 니가 심사위원이 되어 넣을 기능을 찾아 알아서 넣어봐." | 미니맵·콤보·진동을 AI가 발굴 |
-| **경쟁작 리뷰 분석** | "히트작들 사용자 리뷰에서 재미 요소를 뽑고, 우리 게임에 빠진 게 뭔지 진단해줘." | 진화 시스템이 여기서 나옴 |
-| **레퍼런스 이식** | "저 프로젝트 참고해서 전반적으로 퀄리티업해줘." | 검증된 패턴을 장르가 달라도 이식 |
-| **규칙 승격** | "이 세계관/규칙을 CLAUDE.md에 넣어 계속 지켜줘." | 세션이 바뀌어도 일관성 유지 |
-| **상시 위임(스케줄)** | "매일 아침 관련 게임·해커톤·신작·오픈소스를 조사해 넣을 만한 걸 추천 리스트로 만들어줘." | 일회성 조사를 **매일 도는 루프**로 승격 (→ 11.2) |
-| **순차 진행 요구** | "순서대로 진행해줘." | 자동화 여러 개를 한 번에 벌이지 않고 **하나씩 실측·검증**하게 만듦 — 실패 원인이 섞이지 않는다 |
-| **다중 에이전트 감사 + 반증** | "이 화면의 모든 종료·진행 경로를 N개 에이전트가 병렬로 감사하고, 찾은 주장마다 서로 반증을 시도해서 확인된 것만 고쳐줘." | 오탐을 스스로 거른다 — 42 에이전트 감사에서 자리 교환 회귀 크래시(규약 위반 값)·안 보이는 안내(z-index 역전)·멈춘 화면(재예약 누락)을 반증까지 거쳐 확정해 고쳤고, 각각 회귀 테스트로 박아 뒀다 |
+Built-in instrumentation enabling AI agents to execute, inspect, and verify games headlessly.
 
-**공통 원칙:** 사람은 *재미의 방향*을 말하고 — 설계·구현·밸런스·검증·배포는 AI에 위임. 버그는 현상 그대로 서술하고 원인 진단은 AI가.
+### 9.1 Core Harness Instrumentation
 
-**한 가지 더 — "됐다"고 말하기 전에 실제로 돌려보게 하라.** 이 방법론에서 나온 교훈 대부분(3.6의 CI
-함정 셋, 11.3의 시간대·멱등성)은 **문서를 쓰다가가 아니라 실제로 크론을 돌려보다가** 나왔습니다.
-자동화를 만들었으면 그 자리에서 한 번 수동 실행해 끝까지 통과하는 것을 보고 커밋하세요.
+1. **Debug Hooks:** Expose global control APIs (`window.__game = { state, jump(wave), addGold(n) }`) behind a `?debug` URL gate.
+2. **`?rafshim` (rAF Polyfill):** Replace `requestAnimationFrame` throttled background tabs with fixed timers to prevent execution freezes during automated CLI test runs.
+3. **Fixed Timestep Engine Loop:** Guarantee identical gameplay speed regardless of rendering frame drops: `while (acc >= 1/60) { tick(1/60); }`.
+4. **Disable Time-Altering FX During Bot Runs:** Automatically disable hit-stops (`dt=0` pauses) or slow-motion FX during bot runs to preserve deterministic execution order.
+5. **Pixel Capture & Inspection:** Enable `preserveDrawingBuffer` on WebGL canvases to extract raw pixel data (`readPixels`) for automated contrast, bloom, and color checks.
+6. **Headless CLI Logic Audits:** Execute pure functions (e.g., maze reachability, procedural generation rules) in Node.js, auditing hundreds of layouts in under 1 second without opening browser instances.
 
-### 8.1 실측 근거도 텍스트로 남겨라 — 스크린샷 대신 SVG
+### 9.2 Headless Audio Node Tracking
 
-0장의 원칙("복잡성을 에셋이 아니라 코드에")은 **게임 안에만 적용되는 게 아닙니다.** 검증 결과를
-문서에 붙일 때도 그대로 통합니다. 테스트 통과 화면·벤치마크 출력을 스크린샷으로 찍는 대신,
-**명령의 stdout을 터미널 모양 SVG로 렌더**하세요.
+Since headless browsers lack audio output, override `AudioContext` prototypes to intercept node creation and count active oscillators, buffers, and convolvers:
 
-```bash
-node scripts/render-run.mjs media/test.svg "npm run test" -- npm run test
+```js
+window.__audio = { osc: 0, buf: 0, panner: 0 };
+// Increment node counts upon createOscillator / createBufferSource calls
 ```
 
-| | 스크린샷/GIF | 터미널 SVG |
-|---|---|---|
-| diff | 불가(바이너리) | **가능 — 무엇이 바뀌었는지 리뷰에 보인다** |
-| 해상도 | 찍은 크기 고정 | 무관(벡터) |
-| 크기 | 데모 GIF 11.8MB | **12KB — 약 1000배 차이** |
-| 갱신 | 사람이 다시 찍어야 | 명령 한 줄로 재생성 |
+### 9.3 Procedural Content Validation & Evaluation
 
-기와장터에서 실제로 쓴 방식입니다(`client/public/test-local.svg` 12KB vs `media/demo.gif` 11.8MB).
-저장소가 바이너리로 붓지 않고, **근거가 낡으면 스크립트를 다시 돌리면 그만**입니다. 움직임을 보여야
-하는 것(플레이 영상)만 GIF·MP4로 남기고, 나머지 증거는 텍스트로 두세요.
+For generated mathematical problems or text quests, run automated evaluators over tens of thousands of generated instances (`evaluate(p.text) === p.answer`) to catch incorrect answers, ambiguous syntax, or irrational numbers prior to shipping.
+
+### 9.4 Silent Test Execution Enforcement
+
+Ensure test flags (`?rafshim`, `?debug`) automatically mute audio output without overwriting saved user preference state in `localStorage`.
+
+### 9.5 Living Demo Bots via Shared AI Logic
+
+Share core bot decision modules (`src/bot.js`) directly with browser demo modes. Sharing decision logic guarantees that public demo loops serve as continuous, living E2E regression tests.
 
 ---
 
-## 9. 자동 검증 하네스 (AI가 자기 게임을 플레이하려면)
+## 10. Designing the First 5 Minutes (Reviewer & Onboarding Optimization)
 
-AI가 헤드리스/숨김 탭에서 게임을 스스로 구동·검증하기 위한 장치들. 새 게임에도 초반에 심어두면 이후 모든 검증이 쉬워집니다.
+Game jam evaluations and player retention metrics show a recurring pattern: **reviewers spend only a few minutes per game**, and initial impression polish dictates evaluation scores. Reducing friction before reaching the core gameplay loop is paramount.
 
-- **디버그 훅** — `window.__game = { state, jump(w), gold(n), hurt(n) }` 처럼 상태 조회·조작 API를 노출 (프로덕션에선 `?debug` 게이트).
-- **`?rafshim`** — 숨김 탭에서 스로틀되는 `requestAnimationFrame`을 타이머로 대체하는 심. 자동화 환경에서 게임이 멈추지 않게.
-- **고정 타임스텝** — `while (acc >= 1/60) { tick(1/60) }`. FPS가 낮아도(또는 헤드리스 소프트웨어 렌더링이어도) 게임 속도가 일정.
-- **시간을 조작하는 연출은 봇 검증 중에 꺼라 ⚠️** — 히트스톱(명중 프레임에 `dt=0`을 주어 '묵직함'을
-  만드는 기법)처럼 **시간 자체를 건드리는 게임필 장치**는 고정 타임스텝의 결정론을 깹니다. 같은 시드가
-  같은 결과를 내지 않게 되고, 밸런스 측정에 프레임 정지가 섞입니다. 한 줄이면 막힙니다:
-  ```js
-  if (fixedDt <= 0 && hitStop > 0) { hitStop -= delta; dt = 0; }  // 고정 dt(봇)일 땐 통째로 비활성
-  ```
-  실측(백층 던전): 명중 세기에 따라 35~83ms를 얼립니다 — 사람에겐 타격의 무게로 읽히지만 봇에겐
-  그냥 사라진 시간입니다. **일반화: `dt`·난수 소비 순서·프레임 수를 바꾸는 연출은 전부 이 대상**
-  (슬로모션·화면 정지·연출 중 입력 잠금 등). 게임필을 넣을 때마다 "이게 결정론을 깨는가"를 물으세요.
-- **스크린샷 회수** — WebGL 캔버스를 `preserveDrawingBuffer`로 만들고 `toDataURL`/`readPixels`로 회수해, **AI가 실제 픽셀을 보며** 블룸·색·대비를 튜닝.
-- **연출 전용 훅 ★** — 타격감처럼 *자원을 쓰는 행동의 결과로만* 보이는 연출은, **연출만
-  흉내 내는 훅**(`__game.bossHit(123)`)을 하나 두면 검증이 공짜가 됩니다. 상태는 건드리지
-  않고 이펙트만 재생하므로, 스모크가 "숫자가 뜨는가 → 스스로 사라지는가(풀 누수)"까지
-  매 푸시마다 봅니다. 실제 자원(가스·아이템·쿨다운)을 태우지 않고요.
-  같은 훅으로 스크린샷을 찍으면 AI가 섬광 세기를 눈으로 보고 튜닝할 수 있습니다 —
-  실제로 첫 시도의 흰색 틴트가 너무 강해 캐릭터 실루엣이 사라진 것을 스크린샷으로 잡았습니다.
-- **CI 스모크** — 부팅 시 콘솔 에러 0건 + 봇 사망 분포 정상 범위를 배포 게이트로 (→ 11장에서 상시 루프로 확장).
-- **순수 함수 검사** — 지형·수치처럼 렌더가 필요 없는 것은 브라우저 없이 검사하세요. 수백 개 맵의
-  도달 가능성·고립 영역·밀도를 **1초 안에** 보는 스크립트는 브라우저 자동화보다 훨씬 자주 돌릴 수 있습니다.
+| Strategy | Action Item | Purpose |
+|----------|-------------|---------|
+| **Instant Play Button** | Add "⚡ Instant Battle" to the title menu | Bypass intro cinematics and tutorials to launch Wave 1 in <1 sec |
+| **Single-Use Coach Chips**| Display a 1-line control hint during the first run | Teach controls implicitly without forcing modal tutorials |
+| **Expose Core Goals Early** | Display ultimate targets on UI ("N steps away from Mythic") | Ensure unique gameplay jackpots are visible immediately |
+| **Autoplay Spectate Mode** | Single-click automated AI gameplay showcase | Insurance policy for judges who lack time to play manually |
+
+> **Automated Verification Tip:**
+> Lock onboarding pathways with CI smoke tests verifying that clicking "Instant Play" brings up core HUD elements within 2 seconds.
 
 ---
 
-### 9.1 게이트가 **자기 툴체인 때문에** 죽을 때 — 게임을 의심하기 전에 대조군을 세워라
+## 11. Continuous Automation — Background Execution Loops
 
-밸런스 게이트를 돌렸더니 봇 프로세스가 종료 코드 139(SIGSEGV) / 0xC0000005로 죽었습니다.
-반사적으로 "내 엔진에 무한 재귀나 메모리 누수가 있나" 싶지만, 그 전에 **세 개의 대조군**으로
-용의자를 좁히는 게 훨씬 빠릅니다.
+Elevate testing tools into **continuous background automation workflows** (CI/Cron), creating self-maintaining verification loops.
 
-| 대조군 | 물어보는 것 | 이번 결과 |
-|--------|-------------|-----------|
-| 같은 시드를 60번 반복 | 특정 데이터가 죽이나? | 매번 **다른 판**에서 죽음 → 데이터 무관 |
-| 게임과 무관한 순수 CPU 루프 90초 | 그냥 오래 돌면 죽나? | 멀쩡 → 단순 과부하 아님 |
-| 판마다 힙 사용량 출력 | 누수인가? | 60판 내내 5~7MB 평평 → 누수 아님 |
+| Automated Loop | Frequency | Core Functionality |
+|----------------|-----------|--------------------|
+| **Deployment Smoke Gate** | On `git push` | Runs headless browser audits; fails deployments on console runtime errors. |
+| **Nightly Balance Gate** | Daily at midnight | Runs bot simulations; opens automated GitHub issues if medians drift from baselines. |
+| **Daily Ghost Runs** ★ | Daily at midnight | Executes seeded bot runs and commits recorded ghost telemetry as game content. |
+| **Morning Trend Scout** | Every morning | Researches game jam trends and open-source repos, filtering top ideas via 3-Gate rules. |
+| **Automated Doc Metrics** | Periodic | Parses git commit history to update performance metrics and documentation stats. |
 
-셋 다 "게임 코드 아님"을 가리키면 원인은 런타임/OS 쪽입니다. 여기서 원인 규명에 매달리지 마세요 —
-**게이트의 목적은 밸런스를 재는 것이지 런타임을 디버깅하는 게 아닙니다.**
+### 11.1 Promoting Test Artifacts to Gameplay Content
 
-고칠 수 없는 것은 회피하면 됩니다. 크래시 확률은 프로세스가 하는 일의 양에 비례하니, **잘게
-쪼개고 재시도**하면 게이트가 되살아납니다.
+Commit daily bot simulation logs (`public/ghost/<date>.json`) as static JSON files. Web clients can fetch these files as daily leaderboard ghosts without requiring dedicated backend servers or databases.
 
-```js
-for (const shard of difficulties.flatMap(d => profiles.map(p => [d, p]))) {   // 1개 → 9개로 분할
-  for (let t = 1; t <= 6; t++) {
-    const r = spawnSync(node, [bot, runs, ...shard, 'check']);
-    if (r.status === 0 || r.status === 1) break;      // 0=통과 1=기준선 이탈, 둘 다 "정상 종료"
-    // 그 외 종료 코드 = 프로세스 크래시 → 재시도 (실패로 치지 않는다)
-  }
-}
-```
+### 11.2 5 Rules for Cron Automation
 
-핵심은 **크래시와 실패를 구분하는 것**입니다. 종료 코드 1(기준선 이탈)은 진짜 실패라 그대로
-빨간불을 켜야 하고, 크래시는 재시도 대상입니다. 둘을 뭉뚱그려 재시도하면 진짜 회귀를 놓치고,
-둘을 뭉뚱그려 실패 처리하면 게이트가 무용지물이 됩니다. 흡수한 크래시 횟수는 로그에 남기세요 —
-조용히 삼키면 툴체인이 썩어가는 걸 아무도 모릅니다.
-
-### 9.2 소리는 귀로만 확인된다 — 그래서 **노드를 세라**
-
-화면은 스크린샷으로 회수하면 되지만(9장 위쪽), 소리는 헤드리스에서 들을 수 없습니다.
-그래서 "믹서가 실제로 섰는가 · 리버브가 걸렸는가 · 자리 소리가 붙었는가"가 조용히 깨진 채
-배포되기 가장 쉬운 항목입니다. 방법은 하나입니다: **앱 코드보다 먼저 `AudioContext`를 감싸
-무엇이 만들어지는지 센다.**
-
-```js
-await ctx.addInitScript(() => {                 // Playwright: 페이지 스크립트보다 먼저 실행
-  const Orig = window.AudioContext;
-  window.__audio = { osc: 0, buf: 0, conv: 0, panner: 0, comp: 0, ctx: null };
-  window.AudioContext = function (...a) { const c = new Orig(...a); window.__audio.ctx = c; return c; };
-  window.AudioContext.prototype = Orig.prototype;
-  for (const [k, m] of [['osc','createOscillator'], ['buf','createBufferSource'],
-                        ['conv','createConvolver'], ['panner','createPanner'],
-                        ['comp','createDynamicsCompressor']]) {
-    const orig = Orig.prototype[m];
-    Orig.prototype[m] = function (...a) { window.__audio[k]++; return orig.apply(this, a); };
-  }
-});
-```
-
-이것만으로 게이트가 세 줄 생깁니다: 컴프레서 1개(마스터 버스가 하나로 모였나) ·
-컨볼버 1개(리버브) · 패너 1개 이상(자리 소리). 3D 오디오는 한 걸음 더 갈 수 있습니다 —
-캐릭터를 순간이동시키고 `ctx.listener.positionX.value`가 따라오는지 보면 **귀가 어디 달렸는지**를
-숫자로 확인할 수 있습니다(5.4 ③의 함정이 그대로 회귀 테스트가 됩니다).
-
-**세는 대상은 "구현"이 아니라 "약속"이어야 합니다.** 처음에는 "마을 트랙에는 북이 없다"를
-`createBufferSource` 호출 수로 검사했는데, 뒤에 가야금을 Karplus–Strong(버퍼 재생)으로
-바꾸자 이 게이트가 깨졌습니다 — 소리는 멀쩡한데 테스트만 틀린 것입니다. 노드 종류로
-악기를 구분하려 들면 **테스트가 구현을 따라다니게** 됩니다. "전투 트랙이 평상시보다 촘촘하다"
-처럼 바뀌어도 참인 명제로 바꾸세요.
-
-> 시간 표본을 뜰 때는 거리가 아니라 **속도**로 판정하세요. 헤드리스 CI의 타이머는 부하에 따라
-> 늘어지므로 "100ms에 몇 m 움직였나"는 흔들리지만 "m/s가 걷기 속도의 몇 배인가"는 안정적입니다.
-
-### 9.3 생성한 콘텐츠는 **기계가 풀어서** 검산하라 — 특히 정답이 있는 것
-
-문제·퀘스트·조합 레시피처럼 **정답이 정해진 콘텐츠를 절차 생성**한다면, 눈으로 몇 개
-확인하는 걸로는 부족합니다. 생성기는 조합 폭발을 일으키고, 잘못된 산출물은 하필
-**가장 신고를 못 하는 사용자**에게 갑니다 — 아이는 "게임이 틀렸어요"라고 말하지 않고
-자기가 틀렸다고 생각합니다.
-
-검사기는 게임을 실행하지 않고 생성기만 부르면 되니 몇 초면 끝납니다.
-
-```js
-for (const p of generateMany(20000)) {
-  const v = evaluate(p.text);                       // 식을 실제로 계산해 본다
-  if (v !== null && Math.abs(v - p.answer) > 1e-9) fail('정답 불일치', p);
-  if (!isFinite(p.answer * 1000)) fail('입력할 수 없는 답', p);      // 0.333...
-  if (AMBIGUOUS.test(strip(p.text))) fail('모호한 표기', p);
-}
-```
-
-**표기의 모호함도 버그로 취급하세요.** `15 ÷ 3/6 = ?` 은 답(30)이 맞아도 실패입니다 —
-한 줄 슬래시는 `15÷3÷6` 으로도 읽혀서, 학습 목표(1보다 작은 수로 나누면 몫이 커진다)에
-닿기 전에 식부터 잘못 읽게 만듭니다. 분수는 분자·가로줄·분모로 **세로로** 그리세요.
-같은 이유로 `3/6` 처럼 약분되는 표기도 막아야 합니다. 교과서에 안 나오는 꼴은
-아이에게 "내가 배운 것과 다른 것"입니다.
-
-> 콘텐츠 생성기가 있는 프로젝트라면 밸런스 게이트와 **나란히** 이 검사기를 두세요.
-> 밸런스 봇은 "게임이 재미있나"를, 콘텐츠 검사기는 "게임이 옳은가"를 지킵니다.
-> 실측: 2만 문제 중 식으로 검산 가능한 11,784개를 전수 대조하는 데 몇 초면 끝났습니다.
-
-### 9.4 하네스는 **조용해야** 한다 — 검증할 때마다 소리가 터지면 사람이 먼저 지친다
-
-자동 검증을 붙이면 게임을 하루에 수십 번 띄우게 됩니다. 그때마다 옆에서 효과음이
-터지고 BGM이 도는 것을 사람이 견딜 수 없습니다. 실제로 이 프로젝트에서 나온 첫 불만이
-"테스트할 때 소리 좀 줄여 달라"였습니다 — 기능 버그보다 먼저 왔습니다.
-
-```js
-// 자동화 플래그로 열었거나 ?mute를 붙였으면 소리 없이 시작한다
-if (params.has('mute') || params.has('rafshim')) forceMute();
-```
-
-두 가지를 지키세요.
-
-1. **자동화 플래그가 무음을 함의하게** 하세요. 검증 스크립트가 매번 `&mute`를 붙이는 걸
-   기억해야 한다면 언젠가 빠뜨립니다. 헤드리스·rafshim 같은 기존 플래그에 묶으세요.
-2. **테스트용 음소거는 저장하지 마세요.** 사용자의 소리 설정을 덮어쓰면 다음에 사람이
-   게임을 열었을 때 영문 모르고 무음입니다. 저장하는 토글과 저장 안 하는 강제 음소거를
-   **다른 함수**로 두세요.
-
-> 반대 방향의 사고도 있습니다. 소리가 나는 URL로 한 번 확인한 뒤 토글을 원상 복구하다가
-> **켠 상태로 끝나서** 사용자에게 다시 소리가 터졌습니다. 확인이 끝나면 마지막 상태는
-> 항상 무음이 되게 하세요 — 검증 세션의 종료 상태도 산출물의 일부입니다.
-
-그리고 음소거는 **가장 시끄러운 화면에서 닿을 수 있어야** 합니다(5.0). 전체화면 모달이
-전역 단축키를 막고 있으면, 소리가 제일 많이 나는 그 순간에 끌 방법이 없습니다.
-모달 안에서도 음소거 키를 받되, 텍스트 입력과 부딪히지 않게 **입력창이 비었을 때만**
-받으면 됩니다.
-
-### 9.5 밸런스 게이트 옆에 **불변식 게이트**를 세워라 — 규약을 깬 값은 엉뚱한 곳에서 터진다
-
-밸런스 봇은 "재미있나"를 재고 콘텐츠 검사기(9.3)는 "옳은가"를 재지만, 둘 다 **자료구조 규약**은
-안 봅니다. 규약을 깬 값은 그 자리에서 터지지 않고 한참 뒤 전혀 다른 코드에서 터집니다.
-
-> 실측: "벤치에 있음"을 뜻하는 값이 프로젝트 전체에서 `padIndex: -1` 이었는데, 새로 넣은
-> 자리 교환 함수만 `null` 을 넣었습니다. 자바스크립트에서 **`null >= 0` 은 `true`** 라
-> 그 유닛이 "배치됨"으로 분류됐고, 한참 뒤 합성 코드가 `PADS[null].x` 를 읽다가 죽었습니다.
-> 골드·재료·결과물이 통째로 사라집니다. 교환 기능 자체는 멀쩡히 동작했고 테스트도 통과했습니다.
-
-불변식 검사기는 게임을 렌더링하지 않고 순수 로직만 두드리므로 몇 초면 끝납니다.
-**상태를 바꾸는 연산을 섞어 돌린 뒤** 규약이 깨졌는지 보세요.
-
-```js
-const sane = (st) => {
-  for (const u of st.bench) assert(u.slot === -1)                       // 규약값 하나로 고정
-  for (const u of st.field) assert(Number.isInteger(u.slot) && u.slot >= 0)
-}
-place(); sane(); recall(); sane(); move(); sane(); swap(); sane()       // 연산마다 확인
-combine()                                                              // 예외가 안 나야 한다
-```
-
-- **비교로 방어하지 말고 종류로 방어하세요.** `x >= 0` 은 `null`·`""`·`false`·`[]` 를 전부
-  통과시킵니다. `Number.isInteger(x) && x >= 0` 이면 규약 밖의 값이 조용히 새지 않습니다.
-- **테스트에 이빨이 있는지 확인하세요.** 버그를 일부러 되돌려 빨간불이 켜지는 걸 본 뒤에
-  커밋하세요. 통과만 확인한 테스트는 통과하는 법만 배운 테스트입니다.
-- 새 편의 기능(이동·교환·자동 배치)은 **기존 규약을 건드리는 위치**에 들어갑니다.
-  기능이 추가될 때가 아니라 **규약이 늘어날 때** 이 검사기를 갱신하세요.
-
-### 9.6 NPC/이동 로직도 순수 함수로 떼어 **실제 배치 위에서** 걸려 보라
-
-밸런스 봇(§3)이 전투를 시뮬레이션하듯, NPC 배회 같은 "그냥 도는" 로직도 순수 함수로 떼면
-브라우저 없이 검사할 수 있습니다. 기와장터(giwa-village, 2026-07-26)에서 충돌 판정을 넣은 뒤
-주민이 이상하게 움직이는 버그를 이 방식으로 잡았는데, 원인이 **셋**이었고 셋 다 코드를 읽는
-것만으로는 안 보이고 실제 배치표 위에서 걸려 봐야 드러났습니다.
-
-- **스폰 지점이 이미 막혀 있을 수 있습니다.** 상인의 집이 자기 좌판 콜라이더 안이었습니다
-  (실측: 주민 6명 중 4명). 세울 때 한 번 밖으로 밀어내지 않으면 매 틱 밀려나며 제자리에서
-  떱니다.
-- **목적지도 갈 수 있는 자리인지 확인하고 골라야 합니다.** 벽 안을 목표로 고르면 평생 그
-  벽을 비빕니다(실측: 배회 영역의 7~43%가 막혀 있었습니다).
-- **막힌 틱에도 좌표는 반드시 화면에 넘기세요.** "막혔으니 이번 틱은 렌더 생략"이 가장
-  위험한 버전입니다 — 막힌 동안 밀려난 거리가 다음 렌더 틱에 한꺼번에 반영돼
-  **순간이동처럼 보입니다.** 실제로 이것이 "아바타가 튄다"는 신고의 진짜 원인이었고,
-  겉보기 증상(튐)만 보고는 원인(조건부 좌표 전달)을 못 찾습니다. 방향도 "가려던 쪽"이
-  아니라 "실제로 이동한 쪽"을 봐야 합니다 — 안 그러면 벽을 따라 미끄러질 때 게걸음이 납니다.
-
-```js
-// 순수 모듈이라 노드에서 바로 import해 실제 배치 데이터 위에서 걸려 볼 수 있다
-const w = makeWanderer(home, seededRand);
-for (let i = 0; i < 60 / dt; i++) {
-  const [px, pz] = [w.x, w.z];
-  tickWander(w, dt, seededRand);                                         // 막혔어도 좌표는 갱신됨
-  assert(Math.hypot(w.x - px, w.z - pz) <= NPC_SPEED * dt + EPS);        // 한 틱에 보폭 이상 안 튄다
-  assert(!insideAny(w.x, w.z, NPC_R));                                   // 벽 안에서 끝나지 않는다
-}
-```
-
-> 실측: 주민 6명 × 5분(20Hz) 시뮬레이션에서 화면이 받는 최고 속도가 10.20 → 2.40m/s(걷는
-> 속도 그대로)로, 벽 안에서 끝난 틱이 355 → 0으로 떨어졌습니다. "상인 집이 좌판과 겹치는
-> 상황"을 회귀 기준으로 테스트에 그대로 박아 뒀습니다 — 그 전제가 사라지면(배치를 고쳐서)
-> 테스트가 먼저 알려줍니다.
-
-한계: 이 검사는 규칙을 지키는지만 봅니다. **튀는지 자체는 화면을 봐서 증명이 안 되고
-좌표를 시간에 따라 찍어야만 보입니다** — 디버그 훅에 좌표 스트림을 열어 두면(§9 상단
-디버그 훅 참고) 실브라우저 확인이 쉬워집니다.
-
-### 9.7 데모(자동 시연)는 **각본이 아니라 봇**으로 만들어라
-
-게임을 보여 줄 일은 반드시 생긴다 — 심사자, 학부모, 링크를 받은 사람. 이때 흔한 선택은
-장면을 순서대로 재생하는 **각본형 시연**이다. 동작하지만 대가가 크다. 각본은 게임이 바뀔
-때마다 손으로 고쳐야 하고, DOM 클래스명·화면 이름에 못이 박혀 리팩터링을 막는다.
-
-**이미 밸런스 봇(3장)이 있다면 데모를 새로 만들 이유가 없다.** 봇은 이미 판단할 줄 안다.
-
-```
-scripts/balance-bot.mjs   헤드리스 · 수백 판 · 통계   ┐
-                                                     ├─ 같은 뇌: src/bot.js
-src/demo.js               브라우저 · 한 판 · 구경용   ┘
-```
-
-- 봇의 판단부를 **순수 모듈로 뽑아** 둘이 공유한다. 두 벌로 갈라지면 "봇은 통과하는데
-  화면에선 이상하게 노는" 상황이 생긴다. 실제로 조합 선택 정렬 로직이 봇과 게임에
-  글자 그대로 같은 코드로 두 곳에 있었다.
-- **모양만 두 가지로 노출한다**: 봇은 준비 단계를 한 번에 해치우고(batch), 데모는
-  프레임마다 하나씩 먹는다(stream). `prepActions()` / `nextPrepAction()` — 정책은 한 곳.
-- **조작은 사람이 쓰는 경로로만** 흘려라(소환·배치·제출 함수 그대로). 데모 전용 지름길을
-  만들면 데모에서만 되는(또는 안 되는) 버그가 생긴다. 이 규율을 지키면 데모가
-  **살아 있는 회귀 테스트**가 된다 — 어딘가 망가지면 데모가 먼저 멈춘다.
-- **모달이 시뮬레이션을 멈추는 구조라면 데모 스텝은 그 바깥에 붙여라.** 안 그러면
-  문제창이 뜬 순간 데모도 같이 멈춰 영영 못 빠져나온다.
-- 봇이 학습 활동(수학 문제 등)을 **동전던지기로 대신하고 있다면** 데모에는 그 간극을
-  메울 함수가 하나 필요하다. 화면에는 진짜 문제가 뜨므로 "무엇을 입력할지"를 만들어야 한다.
-  정답률은 봇 프로필을 그대로 쓰고, 틀릴 때는 채점기가 확실히 오답으로 볼 값을 낸다.
-
-> 데모 중임을 화면에 계속 밝히고(자막 + 테두리), 나가는 길을 늘 보이게 두라.
-> 사용자가 "내 조작이 안 먹는다"고 오해하는 순간 데모는 버그가 된다.
-> 그리고 **README 첫 화면에 링크를 걸어라** — 설치도 조작도 없이 게임을 보여 주는
-> 가장 싼 방법이고, 이건 만들고 나서 자주 잊는다.
-
-### 9.8 CI 단계가 순차로 이어질 때 — **앞 단계가 남긴 프로세스가 다음 단계를 굶긴다**
-
-배포 CI에서 안정적이던 부팅 스모크가 갑자기 실패했다("주민이 실제로 걷는다 (6명 · 0.0m)" —
-아무도 안 걸음). 클라이언트 코드는 한 줄도 안 건드렸고 로컬에서는 통과한다. 로그의 시각이
-범인을 가리켰다 — 24회 × 100ms(2.4초)여야 할 표본 수집이 CI에서 10.5초 걸렸다. **걸음이
-고장 난 게 아니라 페이지가 CPU를 못 받은 것**이었다.
-
-굶긴 것은 바로 앞 CI 단계에 새로 넣은 프로토콜 스모크였다. `child.kill()`은 npm이 띄운
-**셸만** 죽이고 그 아래 매달린 dev 서버(tsx/node)는 살아남는다. 그 유령 프로세스가 다음
-단계인 브라우저 스모크와 CPU를 나눠 쓰면서 모든 타이머가 늘어졌다.
-
-```js
-const child = spawn(cmd, args, { detached: true });   // POSIX: 이 프로세스를 그룹의 리더로 띄운다
-// ...
-process.kill(-child.pid, 'SIGTERM');                    // 그룹째 종료 (음수 pid = 프로세스 그룹)
-// Windows: execSync(`taskkill /PID ${child.pid} /T /F`) // 반드시 동기로 — 비동기면 스크립트가
-                                                          // 먼저 끝나 아무도 안 죽는다
-await waitPortFree(port);                                // 종료 뒤 포트가 정말 비었는지 스스로 검사
-```
-
-- **시작할 때 포트가 이미 잡혀 있으면 멈춰라.** 조용히 다음 포트로 넘어가거나 기존 서버에
-  붙으면, 새 코드가 아니라 **낡은 서버를 검사하고도 초록불**이 뜬다 — 실제로 이 사고를 고치는
-  동안 앞선 실행이 남긴 유령이 포트를 쥐고 있어서 옛 서버를 검사하고 있었다. 통과해도
-  의미가 없는 통과다.
-- CI 파이프라인에 순차 단계(스모크 A → 스모크 B → …)가 있고 각 단계가 자체 dev 서버를
-  띄운다면 이 패턴은 스택과 무관하게 반복된다 — 부모가 셸이고 그 아래 실제 서버가 매달리는
-  구조는 언어를 안 가린다.
-
-### 9.9 봇의 클릭이 **아무 일도 안 일으킬 수 있다** — 리스너의 이벤트 타입을 먼저 확인하라
-
-봇이 버튼을 눌러도 게임이 반응하지 않으면 로직을 의심하기 쉽지만, 흔한 원인은 더 앞에 있다 —
-**그 버튼이 `click`이 아니라 `pointerdown`을 듣고 있는 경우**다. 즉시 반응이 중요한 UI(발동
-버튼·차지 게이지 등)는 클릭의 up→down 지연을 피하려고 `pointerdown`을 직접 구독하는데,
-자동화 스크립트의 만능 도구인 `el.click()`은 오직 `click` 이벤트만 합성한다. 버튼이 화면에
-있고, 코드도 눌렸을 때 하는 일이 맞는데, **그냥 영원히 발동하지 않는다** — 에러도 없고
-콘솔 로그도 없어서 한동안 그 기능 자체가 검증에서 통째로 빠진다.
-
-```js
-// btn.click() 은 pointerdown 리스너에는 절대 닿지 않는다
-const ev = new PointerEvent('pointerdown', { bubbles: true });
-btn.dispatchEvent(ev);
-```
-
-- **못 찾으면 키보드로 대체하고, 어느 경로로 발동했는지 리포트에 남겨라.** "탭했다"만 세면
-  버튼이 실제로 먹혔는지 키 우회로 넘어갔는지 구분이 안 된다 — 버튼 경로 카운트가 0이면
-  그 자체가 회귀 신호다.
-- **같은 셀렉터가 여러 개 존재할 수 있다.** 화면 전환 중 이전 씬이 언마운트 대신 `hidden`
-  처리만 되는 구조라면, 정지된 씬도 자기 몫의 버튼을 그대로 들고 있다. 사람 눈에는
-  폴링 갱신(예: 150ms 간격 `display` 갱신)이 가려 하나만 보이지만, **헤드리스에서는 그
-  타이머가 스로틀에 죽어** DOM만으로는 '보이는 버튼'을 골라낼 수 없다. 안전한 처방은
-  가리려 들지 말고 **매칭되는 전부에 쏘고**, 정지된 인스턴스는 자기 자신의 pause 상태로
-  스스로 무시하게 만드는 것이다.
-- **무적·회피처럼 "발동 중엔 피해가 없어야 하는" 자원은, 발동 순간의 체력과 해제 순간의
-  체력을 비교해 카운트하라.** 탭 수·발동 수만 세면 "눌리긴 했다"까지만 증명된다 — 실제
-  가드가 전투 경로에서 샜는지는 이 비교 하나로 드러난다.
-
-> 실측(백층 던전, 2026-07-29): 시간 동결·무적 대시 두 버튼이 `useFreezeInput`/
-> `useResolveInput` 훅에서 `pointerdown`만 구독하고 있어, 기존 `clickBtn()`(`.click()` 기반)
-> 헬퍼로는 검증 코드를 새로 짜기 전까지 **한 번도 발동을 확인하지 못했다**. `PointerEvent`를
-> 직접 쏘는 `tapAbility()`로 바꾼 뒤에야 실제 발동 수(찰나 10회·결의 27회, 전부 버튼 경로)와
-> 발동 중 체력 손실 0회(무적 가드가 실제 전투에서 안 샜음)를 확인할 수 있었다. 아레나
-> 화면은 하단 버튼이 두 씬(정지된 던전 + 활성 아레나) 모두에 존재해, 전부에 이벤트를 쏘고
-> pause 상태로 자체 방어하는 처방이 실제로 필요했다.
-
-### 9.10 봇이 **사람의 경로로** 놀면 사람의 **기록에도** 쓴다 — 영속 기록에는 가드를 달아라
-
-9.7은 데모·봇을 "사람이 쓰는 경로로만" 흘리라고 못 박는다. 그 규율이 데모를 살아 있는
-회귀 테스트로 만들어 주지만, 게임에 **기기에 남는 플레이어 기록**(도감·업적·누적 처치·
-학습 통계)이 생기는 순간 대가가 하나 따라온다 — 봇이 사람의 함수를 부르므로 **봇의 판이
-사람의 기록으로 저장된다.** 처음 켠 사람의 도감이 절반쯤 채워져 있고, 업적이 저절로
-달성돼 있고, 통계는 봇의 정답률이다. 에러가 없으니 아무도 눈치채지 못한다.
-
-이 사고는 기록 기능을 넣은 그 커밋에서만 생긴다는 점이 함정이다. 그 전까지 봇은
-쓸 곳이 없어서 안전했고, 9.7의 규율은 아무 문제도 일으키지 않았다.
-
-- **가드는 호출부마다가 아니라 기록 진입점 한 곳에 달아라.** 도감·업적·통계는 서로 다른
-  자리에서 갱신되므로 "여기선 데모니까 건너뛰기"를 흩뿌리면 반드시 하나를 빠뜨린다.
-  7.1의 공용 관문과 같은 논리다 — 나중에 추가되는 기록이 가드를 공짜로 얻어야 한다.
-- **읽기는 막지 마라.** 봇도 자기 판을 진행하려면 그 값을 읽어야 한다. 막을 것은 쓰기다.
-- **기록 조건은 값 비교로만 짜 두면** 언제 평가해도 싸고, 어디서 평가해도 결과가 같다.
-  판정에 부수효과가 섞이면 가드가 "쓰기만 막는" 것으로는 부족해진다.
-- **디스크 쓰기는 모아서 미뤄라**(2.6의 유휴 쓰기와 같은 규율). 매 판정마다 저장하면
-  가드가 새는 지점이 그만큼 늘어난다.
-- **스모크에 "데모를 돌린 뒤 기록이 그대로인가"를 넣어라.** 이건 봇이 자기 자신을 검사할
-  수 없는 종류의 항목이라 게이트로만 잡힌다.
-
-> ⚠️ 헤드리스 밸런스 봇은 보통 저장소 자체가 없어 이 사고를 못 낸다. 위험한 것은
-> **브라우저에서 진짜 게임을 조작하는 데모**다 — 기록 기능이 없는 게임이라면 지금은
-> 해당 없고, 넣는 날 같이 넣으면 된다.
-
-> 실측(용사 수학 디펜스, 2026-08-05, `fedca85`): 도감(용사 53칸·몬스터 12종 누적 처치)·
-> 업적 20종·유형별 정답률 카드를 한꺼번에 들이면서, 기록(`codex`·`mathLog`·`earned`)은
-> 기기에 쌓되 `localStorage` 쓰기는 `flushRecords`로 미루고 **데모(봇)가 플레이한 것은
-> 기록하지 않도록** 가드를 달았다("아이의 기록은 아이의 것"). 업적 20종의 조건은 전부
-> 값 비교로 짜여 있어(`src/balance/achievements.js`) 평가 시점을 자유롭게 고를 수 있었다.
-> 검증은 엔진 불변식 +14건과 브라우저 실측(조합→업적 지급·도감 4탭·옷장 잠금·
-> 30웨이브 승리→2회차 시작·**데모 가드**)이었다.
+1. **Idempotence:** Exit instantly if today's record already exists.
+2. **Explicit Timezones:** Align Cron UTC execution with game local time (e.g., KST).
+3. **Silent Failures:** Never commit corrupted or incomplete bot telemetry; rely on fallback simulation models instead.
+4. **Separate Exit Codes:** Distinguish runtime crashes (exit code 1) from valid baseline shifts (exit code 2).
 
 ---
 
-## 10. 첫 5분 설계 — 심사자·신규 유저는 오래 봐주지 않는다
+## 12. Bootstrap Checklist for New Game Projects
 
-게임잼·해커톤 심사와 인디 게임 리뷰를 조사하면 반복되는 결론이 있습니다: **심사자는 수많은 작품을
-몇 분씩만 본다**, 그리고 **완성도(폴리시)는 드물어서 불균형하게 눈에 띈다.** 즉 재미의 총량보다
-"첫 5분 안에 무엇이 보이는가"가 평가를 지배합니다. 잘 만든 게임이 손해 보는 전형적인 구간이
-**전투/코어 루프에 닿기까지의 거리**입니다.
+```
+[ ] data.(js|ts)   — Centralized numeric balance values
+[ ] engine.(js|ts) — Pure tick(state, dt) → events[] with injected RNG
+[ ] Seeded RNG (mulberry32) — Live client = Math.random / Bot = seeded RNG
+[ ] render.(js|ts) — Render state + emit events to visual effects (blob shadows)
+[ ] sfx  — tone() + noise() primitives, rate-limited impact hits (45–70ms)
+[ ] music — 16-step sequencer with state-based BGM tracks
+[ ] scripts/balance-bot — 3 virtual player profiles × N runs → death distributions
+[ ] scripts/baseline.json + `check` regression gate
+[ ] Closed-form expectation test for Push-Your-Luck mechanics (3.7)
+[ ] Cross-language value verification parsers for multi-runtime projects (2.5)
+[ ] Zero-external-asset verification tests (Appendix B)
+[ ] window.__game debug hooks + ?rafshim + fixed timestep (Chapter 9)
+[ ] Game feel: Ghost health bar, hit flash, combo pops, floating damage text
+[ ] Full keyboard controls (Enter/Space/Esc/Tab/hotkeys) with UI hotkey badges
+[ ] Predictive UI: Auto-advance single choices, one-button loop execution
+[ ] Dominant stat card badges & derived stat hover tooltips
+[ ] Action-Changing Evolution Jackpot traits (at least 1 implementation)
+[ ] Meta-progression currency retained upon player death
+[ ] Adaptive graphics quality scaling based on real-time FPS benchmarks
+[ ] First 5 minutes: "Instant Play" + coach chips + target goal hints + PNG share
+[ ] CI smoke gate (clean onboarding + 0 console errors, benign 404 filters)
+[ ] Nightly automated balance regression Cron (opens issues on drift)
+[ ] Daily bot run automation → Commit telemetry JSON as daily leaderboards
+[ ] Morning trend scout agent (repo review → 3-Gate filter → top recommendations)
+[ ] CLAUDE.md — Architecture rules, verification commands, backlog candidates
+[ ] Public repository setup + automated GitHub Pages deployment pipeline
+```
 
-| 처방 | 무엇을 하나 | 왜 |
-|------|-------------|-----|
-| **바로 시작 버튼** | 타이틀에 "⚡ 바로 코어 루프로" 항목 — 인트로·허브를 건너뛰고 즉시 1층/1웨이브 | 세계관은 매력이지만 *첫 방문자에게 강제하면* 이탈 구간이 됨. 스토리는 남기고 **건너뛸 자유**를 준다 |
-| **1회성 코치 칩** | 첫 판에만 조작 한 줄 (`localStorage` 1회) | "튜토리얼 없이 이해되는 조작"이 잼 상위작의 공통점 |
-| **목표를 첫 화면에 노출** | 보상 카드에 "조합 「X」까지 N장" 힌트 칩 | 게임의 차별점(잭팟 시스템)이 *존재하는 줄도 모르고* 끝나는 걸 막는다 |
-| **관전 모드** | 클릭 한 번으로 자동 시연(자막 포함) | 심사자가 직접 플레이할 시간이 없을 때의 보험. 최신 기능이 자동으로 시연에 반영되게 유지 |
-
-> 실측 팁: 이 네 가지는 **CI 스모크로 고정**할 수 있습니다. "타이틀에 바로 시작이 있는가 → 클릭하면
-> N초 안에 코어 루프 HUD가 뜨는가 → 첫 방문자에게 코치 칩이 보이는가"를 매 푸시마다 검사하면,
-> 온보딩이 조용히 망가지는 걸 막을 수 있습니다.
+> **Implementation Priority:**
+> Complete the upper half (Engine, RNG, Balance Bot, Game Feel) during **Week 1**. Add the bottom automation loops **immediately after the core loop is fun**.
 
 ---
 
-## 11. 상시 자동화 — 사람이 자는 동안 도는 루프
+## Appendix A. Why the Methodology is Genre-Agnostic
 
-3장의 봇은 "필요할 때 돌리는 도구"입니다. 그 봇을 **스케줄에 걸면 개발 루프 자체가 자율적**이 됩니다.
-아래 다섯 루프는 실제로 매일 돌고 있고, 각각 사람의 반복 노동을 하나씩 없앱니다.
+| Axis | Roguelike (`dungeon100`) | Defense (`defenehero`) | Social (`giwa-village`) | Genre-Agnostic Abstraction |
+|------|-------------------------|------------------------|-------------------------|---------------------------|
+| **Core Pressure** | Enemies scale by dungeon depth | Enemies scale by wave number | Weekly boss & scheduled events | Threat & opportunity scaling over time |
+| **Growth** | Draft-based item selection | Summon, combine, upgrade | Titles, trinkets, on-chain glyphs | Randomness + Player decision-making |
+| **Jackpot** | Evolution skill cards | Legendary evolution traits | — (Future Improvement Item) | Moments that change core player action |
+| **Verification** | Death depth distribution | Wave survival distribution | Decision breakeven tests (3.7) | Automated verification of choice validity |
+| **Stakes** | Run reset upon death | Base destruction reset | Risk of temporary resource loss | Risk creates meaningful decision-making |
 
-| 루프 | 주기 | 하는 일 | 없애는 노동 |
-|------|------|---------|-------------|
-| **배포 게이트 스모크** | 푸시마다 | 실브라우저로 첫 방문자 동선 + 디버그 훅 심층 검사, 콘솔 에러 1건이면 **배포 중단** | "배포하고 나서 깨진 걸 발견" |
-| **야간 밸런스 회귀** | 매일 새벽 | 봇 N판 → 사망 분포를 기준선과 비교, 이탈하면 **이슈 자동 생성** | 손으로 못 찾는 밸런스 회귀 |
-| **일일 봇 실주행** ★ | 매일 새벽 | 그날의 시드를 봇이 실제로 플레이하고 **기록을 게임 콘텐츠로 커밋** | (아래 11.1 — 노동 제거가 아니라 콘텐츠 생성) |
-| **아침 트렌드 스카우트** | 매일 아침 | 뉴스·스토어 신작·게임잼·GitHub를 조사해 **3-Gate로 거른 추천 리스트** 생성 | "요즘 뭐가 재밌지"를 사람이 매번 찾기 |
-| **문서 데이터 자동 생성** | 필요할 때/주기 | git log를 분석해 개발 일지의 수치·차트 데이터를 재작성 | 수기 통계가 조용히 낡는 것 |
-
-### 11.1 ★ 검증 산출물을 게임 콘텐츠로 승격하라
-
-가장 값진 패턴입니다. 밸런스 봇은 원래 **개발자만 보는 도구**인데, 그 출력을 게임 안으로 들여보내면
-그대로 **매일 갱신되는 콘텐츠**가 됩니다.
-
-- 매일 새벽, 봇이 **그날의 일일 챌린지(날짜=시드)를 실제로 플레이**한다.
-- 결과(도달 층·사인)를 `public/ghost/<날짜>.json` **정적 파일로 커밋**하고 그대로 배포한다.
-- 게임은 일일 챌린지 시작 시 그 파일을 `fetch` 해서 **"AI가 오늘 여기까지 읽었다"** 는 경쟁 상대로 표시한다.
-- 파일이 없으면(아직 안 돌았으면) 추상 모델로 **조용히 폴백** → 백엔드 0개 원칙 유지.
-
-```
-크론 → 봇이 오늘의 시드를 플레이 → 기록 JSON 커밋 → 배포
-                                          ↓
-                        게임: 있으면 실기록, 없으면 모델 폴백
-```
-
-> 이 구조의 좋은 점: **서버도 DB도 없이** 매일 바뀌는 리더보드 비슷한 것이 생깁니다. 그리고 그 기록은
-> 마케팅 문구가 아니라 *실제로 우리 게임을 플레이한 봇의 결과*라, 밸런스가 바뀌면 자동으로 따라옵니다.
-
-### 11.2 아침 트렌드 스카우트 (매일 확인 → 다음 할 일 제안)
-
-"매일 아침 관련 게임·뉴스·해커톤·스토어 신작·오픈소스를 조사해 우리 게임에 넣을 만한 걸 추천"하는
-루틴입니다. 클라우드 에이전트를 크론에 걸어 두면 됩니다. **프롬프트 설계가 품질의 90%** 입니다:
-
-1. **먼저 우리 저장소를 읽게 하라.** 백로그(`CLAUDE.md`의 다음 후보)와 완료 노트를 읽지 않으면
-   **이미 있는 기능을 매일 다시 추천**합니다. "겹치면 '기존 후보와 동일'로 표기"까지 지시.
-2. **3-Gate로 거르게 하라.** 조사 결과를 그대로 나열하면 링크 더미일 뿐입니다. 절차성·재미(결정 추가)·
-   검증가능 세 관문 + 성능 실현성으로 필터링한 **top 3~5**만 남기게 합니다.
-3. **출처 링크를 강제하라.** "링크 없는 주장 금지" 한 줄이 환각을 크게 줄입니다.
-4. **산출물 형식을 못 박아라.** 각 항목에 *무엇을 가져올 것인가 / 3기준 평가 / 예상 규모(소·중·대) /
-   우리 코드베이스식 첫 구현 스케치*. 그래야 다음 세션이 바로 착수할 수 있습니다.
-5. **읽기 전용으로 묶어라.** 코드 수정·커밋·푸시 금지 — 스카우트는 판단 재료를 만들 뿐이고,
-   채택 결정은 사람이 합니다.
-6. **"오늘은 패스" 항목도 요구하라.** 기준 미달로 버린 것과 이유를 남기면, 다음 날 같은 걸
-   다시 검토하는 낭비가 사라집니다.
-
-> 왜 이게 효과적인가: 이 방법론에서 **가장 큰 도약은 늘 외부 관찰에서 나왔습니다.** "히트작 리뷰에서
-> 빠진 재미를 진단해줘"라는 일회성 지시가 잭팟(진화) 시스템을 낳았습니다. 스카우트는 그 일회성
-> 통찰을 **매일 도는 루프**로 바꾼 것입니다.
-
-### 11.3 크론 자동화 설계 5원칙 (실측 함정)
-
-1. **멱등하게.** "오늘 기록이 이미 있으면 즉시 종료." 수동 재실행·크론 중복에도 안전해집니다.
-2. **시간대를 두 번 못 박아라.** 크론은 보통 UTC인데 게임의 '오늘'은 로컬(예: KST)입니다.
-   브라우저 컨텍스트의 타임존을 고정하고, **끝나고 나서 게임이 실제로 기록한 날짜와 파일명을 대조**하세요.
-   이 검증이 없으면 자정 근처에 하루 어긋난 기록이 조용히 커밋됩니다.
-3. **자동 커밋은 다른 워크플로를 깨우지 않는다.** CI 토큰으로 푸시하면 배포 워크플로가 안 돕니다.
-   → 커밋과 배포를 **같은 워크플로 안에서** 이어 붙이세요.
-4. **실패했으면 침묵하라(나쁜 데이터 금지).** 봇이 교착하면 기록을 쓰지 않고 끝냅니다.
-   **빈 데이터가 틀린 데이터보다 낫습니다** — 폴백이 있으면 사용자는 아무것도 눈치채지 못합니다.
-5. **드리프트는 '실패'가 아니라 '알림'.** 종료 코드를 나눠서(예: `1`=비정상 종료 → job 실패,
-   `2`=기준선 이탈 → 이슈 생성) 다루면, 진짜 고장과 튜닝 신호가 섞이지 않습니다.
+While themes and mechanics differ, the rightmost column (**Genre-Agnostic Abstraction**) remains invariant across all game projects.
 
 ---
 
-## 12. 새 게임 부트스트랩 체크리스트 (복사해서 시작)
+## Appendix B. License-Safe Rules
 
-```
-[ ] data.(js|ts)   — 밸런스 수치 전부 여기 한 곳
-[ ] engine.(js|ts) — 순수 tick(state, dt)→events[], RNG 주입식
-[ ] 시드 RNG(mulberry32) 도입, 게임=Math.random / 봇=시드
-[ ] render.(js|ts) — state 렌더 + events→이펙트 (블롭 그림자부터)
-[ ] sfx  — tone()+noise() 2도구, 성공=상승/실패=하강, 히트 레이트리밋
-[ ] music — 스텝 시퀀서, 상태별 트랙
-[ ] scripts/balance-bot — 가상 플레이어 3종 × N판 → 사망 분포
-[ ] scripts/baseline.json + `check` 회귀 게이트
-[ ] 푸시-유어-럭이 있다면 결정점 손익분기 테스트 (표본 대신 기대값 — 3.7)
-[ ] 같은 수치가 두 런타임/두 언어에 살면 소스 대조 검사 (2.5)
-[ ] 에셋 0 규칙을 테스트로 강제 (부록 B)
-[ ] window.__game 디버그 훅 + ?rafshim + 고정 타임스텝 (+ 연출 전용 훅 — 9장)
-[ ] 게임필: 잔상 체력바·히트 플래시·콤보 팝·데미지 숫자
-[ ] 키보드 전 기능 조작(Enter/Space/Esc/Tab/단축키) + 버튼에 핫키 표기
-[ ] 예측형 UI: 유일한 다음 행동은 자동 진행, 반복 루프는 Enter 원버튼, "되돌리기 강요" 0
-[ ] 지배 스탯은 카드에 색등급 표시 + 호버 툴팁(초당 피해 등 비교 수치)
-[ ] 진화/특수능력 "잭팟"(행동을 바꾸는 것) 최소 1종
-[ ] 메타 진행(죽어도 남는 재화)
-[ ] 자동 품질 조절(FPS 측정→강등)
-[ ] 첫 5분: "바로 시작" 버튼 + 1회성 코치 칩 + 목표 노출(조합 힌트) + 기록 카드 PNG
-[ ] CI 스모크를 배포 게이트로 (첫 방문자 동선 + 콘솔 에러 0, by-design 404는 필터)
-[ ] 야간 밸런스 회귀 크론 (이탈 시 이슈 자동 생성)
-[ ] 일일 봇 실주행 → 기록을 게임 콘텐츠로 (정적 JSON + 폴백)
-[ ] 아침 트렌드 스카우트 루틴 (저장소 먼저 읽기 → 3-Gate 필터 → 추천 top 3~5)
-[ ] CLAUDE.md — 아키텍처·규칙·세계관 정답지·검증법·"다음 후보" 목록
-[ ] Public 저장소 + GitHub Pages 배포
-```
+Strict policies preventing open-source license violations when importing external assets.
 
-> 위 절반(엔진·봇·게임필)은 **첫 주에**, 아래 자동화 넷은 **코어 루프가 재미있어진 직후**에 넣으세요.
-> 자동화를 먼저 만들면 아직 없는 게임을 검증하게 됩니다.
+### B.1 Core Import Policy
 
----
+- **Default Rule:** Procedurally generate assets in code by default.
+- **Import Exemption Rule:** If external assets are imported, enforce a strict "No import without ledger registration (`assets.json`)" rule.
 
-## 부록 A. 왜 "장르 무관"인가
+### B.2 Asset Class Import Policies
 
-| 축 | 로그라이크(던전) | 디펜스(용사) | 소셜(기와장터) | 공통 추상 |
-|----|------------------|--------------|----------------|-----------|
-| 코어 압박 | 층을 내려갈수록 강해지는 적 | 웨이브가 셀수록 강해지는 적 | 주간 보스·요일 이벤트 | 시간/진행에 따른 위협·기회 |
-| 성장 | 드래프트로 아이템 획득 | 소환·조합·강화 | 칭호·장신구·문양 | 무작위 + 결정 |
-| 잭팟 | 진화 카드 | 전설 특수능력 | — (미해결 숙제) | 행동을 바꾸는 순간 |
-| 검증 | 사망 층 분포 | 도달 웨이브 분포 | 결정점 손익분기(3.7) | 선택이 살아 있는가 |
-| 실패 | 던전 리셋 | 성 함락 리셋 | 원정 함정 → 잠정 손실 | 잃을 것이 있어야 결정이 생긴다 |
+| Asset Class | Policy | Rationale & Requirements |
+|-------------|--------|--------------------------|
+| **Fonts** | OFL / CC0 only | Document in `CREDITS.md` + mandatory system font fallback. |
+| **Graphics** | Allowed under unified art style | Prevent visual clutter caused by mismatched asset styles. |
+| **Audio** | Synthesize BGM; single-shot SFX imports allowed | Single-shot SFX benefit from audio samples; BGM requires dynamic code variation. |
 
-같은 골격 위에 표피(장르)만 갈아끼운 것입니다. 다음 게임이 무엇이든 이 표의 오른쪽 열("공통 추상")은 그대로 유지됩니다.
+### B.3 The 4 Rules of Asset Ledgers
 
-> 넷째 열이 이 표를 오히려 강하게 만듭니다. 소셜 게임에는 "런"이 없어 **분포를 뽑을 대상이
-> 없지만**, 그 자리에 3.7(결정점 검사)을 넣으면 검증 축이 그대로 성립합니다.
-> 즉 진짜 공통항은 *사망 분포*가 아니라 **"선택이 살아 있는가를 자동으로 본다"** 였습니다.
-> 그리고 **잭팟 칸이 비어 있다는 것 자체가 정직한 진단입니다** — 이 표는 자랑용이 아니라
-> 다음에 무엇을 만들지 알려 주는 도구입니다.
-
----
-
-## 부록 B. 절대 규칙 (License-safe)
-
-- **기본값은 여전히 "코드로 만든다".** 3D는 프리미티브 절차 생성, 텍스트/문제판은 캔버스,
-  배경음은 Web Audio 합성. 절차 생성이 이기는 자리(끝나지 않는 음악·무한 변주·시드로 바뀌는
-  배치)를 파일로 바꾸면 이 방법론의 전제 — 산출물이 전부 AI가 읽고 고칠 수 있는 텍스트 —
-  가 깨집니다.
-- **반입한다면 "금지"가 아니라 "원장 없는 반입 금지"로 바꾸세요.** 규칙을 없애는 게 아니라
-  방향을 바꾸는 것입니다. 아래 표(종류별 정책)와 원장 규율을 함께 지키면, 합성이 약한
-  자리만 골라 채우면서도 라이선스 사고를 구조적으로 막을 수 있습니다.
-- 오픈소스 라이브러리(three.js·React·Vite·esbuild = MIT/Apache)는 허용하되 목록화한다.
-
-**외부 애셋을 허용하기로 했다면 — 종류마다 규칙이 다르다.**
-
-| 종류 | 정책 | 이유 |
-|------|------|------|
-| **폰트** | 허용. OFL/CC0만, `CREDITS.md`에 기록 + 시스템 폰트 폴백 필수 | 가장 값싸게 "완성도"가 오르는 애셋. 대체 가능해서 위험도 낮다 |
-| **그래픽(모델·스프라이트)** | 허용하되 **아트 스타일 통일이 라이선스보다 먼저** | 팩마다 톤이 달라 섞으면 오히려 조잡해진다 |
-| **사운드** | **BGM은 합성, 단발 실물 소리는 반입 가능** — 발소리·동전·문·묵직한 타격처럼 한 번 나고 마는 것 | 합성이 가장 약한 자리가 정확히 여기다. 반대로 배경음은 합성이어야 상황별 변주가 공짜다 |
-
-폴백은 선택이 아닙니다. CDN 폰트는 오프라인·차단 환경에서 **반드시** 실패합니다.
-`font-family`에 시스템 폰트를 뒤에 두면 그때 레이아웃이 깨지지 않습니다. 새 폰트가 기존
-시스템 폰트보다 **넓지 않은지**도 재세요(같은 문자열의 `measureText` 폭 비교) — 넓어지면
-빽빽한 패널이 넘칩니다.
-
-웹폰트는 **부팅할 때 명시적으로 받아 두세요.** 브라우저는 그 글자가 실제로 화면에 그려질 때만
-폰트를 내려받습니다. 그냥 두면 ① 닫혀 있던 모달이 처음 열릴 때 기본 폰트로 그려졌다가 바뀌고
-② 캔버스에 글자를 구워 텍스처로 쓰는 코드는 **폴백 폰트가 텍스처에 박혀** 영원히 안 바뀝니다.
-
-```js
-await Promise.all([
-  document.fonts.load('16px Jua', '용사 수학'),        // 샘플 글자를 함께 주면 필요한 서브셋만 받는다
-  document.fonts.load('700 27px Gaegu', '0123456789'),
-]);
-```
-
-**단, 이 기다림에는 상한을 두세요.** 사내망·CI 샌드박스에서는 폰트 CDN이 통째로 막혀 있고,
-그때 `await`가 부팅을 붙잡으면 *글자꼴 때문에 게임이 안 뜨는* 최악의 교환이 됩니다.
-`Promise.race([load, timeout(1200)])` 한 줄이면 됩니다 — 실측: 폰트 CDN을 라우팅 차단한
-상태에서 타이틀까지 459ms로, 상한에 닿지도 않고 시스템 폰트로 조용히 내려갔습니다.
-
-> **함정: `document.fonts.check()`로는 이 폴백을 검증할 수 없습니다.** CSS 자체가 차단되면
-> `@font-face`가 아예 안 실리고, 그러면 브라우저는 그 이름을 *시스템 폰트*로 보아 **`true`를
-> 돌려줍니다.** "폰트가 로드됐나"를 물으면 안 되고, **차단한 채로 화면이 뜨는지**를 재세요
-> (테스트에서 `route('**://fonts.gstatic.com/**', abort)`). 확인 대상은 폰트가 아니라 폴백입니다.
-
-기록은 `README`의 한 줄이 아니라 **전용 `CREDITS.md`**로 두세요. 표 한 줄이 곧 체크리스트가
-되어, "표에 없는 애셋은 저장소에 들어올 수 없다"는 규칙을 사람이 지킬 수 있게 만듭니다.
-
-**원장 규율 넷** — 이 넷이 있으면 반입이 사고가 되지 않습니다.
-
-1. **원장은 기계가 읽는 파일에 두고, 사람이 읽는 문서는 그 생성물로.** 손으로 쓰는 표는
-   반드시 낡습니다. `assets.json`(출처 URL·저작자·라이선스·우리가 한 손질) → `CREDITS.md`.
-2. **바이너리는 원본 그대로 둔다.** 게인·피치·필터·타일링·색조 같은 손질은 전부 코드에서
-   하세요. 파일을 건드리는 순간 "정말 그 출처에서 온 것인가"를 **체크섬으로 답할 수 없게**
-   되고, 라이선스 대조가 사람의 기억에 의존하게 됩니다.
-3. **출처를 문서가 아니라 실행 가능한 것으로.** `npm run assets` 한 줄이 원장을 읽어 없는
-   파일을 받고 있는 파일의 지문을 대조하게 하세요. 재현되지 않는 출처 기록은 주장일 뿐입니다.
-4. **없으면 없는 대로 서게.** 반입 에셋은 404·오프라인·디코드 실패로 언제든 사라집니다.
-   소리는 합성음으로, 질감은 색만으로, 글자꼴은 시스템 폰트로 조용히 내려가야 합니다 —
-   그리고 그 폴백이 *조용히 나빠지는 것*을 막으려고, 원장이 가리키는 파일이 실제로 있는지를
-   테스트가 봐야 합니다.
-
-
-
-> **이 규칙은 문장이 아니라 테스트로 두세요.** 규칙을 어기는 경로는 언제나 "잠깐 이 mp3만"이고,
-> 그 순간 라이선스 표기 의무가 생깁니다. 규칙은 강제되지 않으면 며칠 안에 사라집니다.
->
-> ```js
-> // 반입 금지일 때: 소스 트리에 바이너리가 있으면 실패
-> const BAD = /\.(png|jpe?g|gif|webp|mp3|wav|ogg|glb|gltf|fbx)$/i;
-> walk('client/src'); walk('client/public');   // 하나라도 걸리면 실패
->
-> // 반입 허용일 때: 검사 대상이 '있느냐'에서 '원장에 있느냐'로 바뀐다
-> assets.filter((f) => !ledger.some((e) => f.startsWith(e.dest + '/')))   // 고아 파일
-> ledger.every((e) => ALLOWED.includes(e.license))                        // 허용 라이선스
-> ledger.filter((e) => needsAttribution(e.license)).every((e) => e.author) // 표기 의무
-> total(assets) <= BUDGET_BYTES                                           // 용량 예산
-> ```
->
-> 용량 예산을 함께 검사하는 이유: 한 번 열어 주면 늘어나는 방향으로만 압력이 걸립니다.
-> 숫자가 게이트에 있으면 "이걸 넣으려면 무엇을 뺄까"를 묻게 됩니다.
-
-**원장 검사를 '외부 호스트'까지 넓힐 때 — "로드"와 "링크"를 구분하세요.** CDN 폰트처럼 파일을
-안 들이고 참조만 하는 반입은 저장소를 훑어도 안 잡히므로, 소스에서 외부 URL을 긁어 원장과
-대조하게 됩니다. 이때 전부 세면 게이트가 **첫날부터 빨간불**입니다 — README의 `<a href>`,
-SVG의 `xmlns="http://www.w3.org/2000/svg"`, 주석에 적어 둔 참고 링크가 모두 걸립니다.
-실제로 로드를 일으키는 자리(`<link href>`·`<script|img|source src>`·CSS `url()`·`@import`·
-`fetch()`)만 세고 나머지는 무시하세요. 3.6 ③과 같은 교훈입니다: **오검출로 늘 빨간 게이트는
-곧 무시되고, 무시되는 게이트는 없는 것과 같습니다.**
-
-> 그리고 새로 만든 게이트는 **위반을 한 번 주입해 실패하는 것까지 보고** 커밋하세요.
-> 원장 검사는 통과가 기본값이라(대개 아무것도 안 들어와 있으니) 영원히 초록인 채 아무것도
-> 검사하지 않아도 아무도 눈치채지 못합니다. 외부 호스트 `fetch` 한 줄과 더미 `.png` 하나를
-> 넣어 각각 잡히는지 보고 지우면 30초입니다.
+1. **Machine-Readable Ledger (`assets.json`):** Track source URLs, authors, and licenses, auto-generating `CREDITS.md`.
+2. **Preserve Original Binaries:** Perform pitch/volume/color modifications in code to retain raw file checksums.
+3. **Automated Verification (`npm run assets`):** Run CLI scripts verifying asset fingerprints against ledger entries.
+4. **Guaranteed Fallback Grace:** Ensure code falls back gracefully to system fonts and synthesized audio if assets throw 404s.

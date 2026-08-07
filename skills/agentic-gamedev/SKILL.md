@@ -19,22 +19,23 @@ description: AI가 기획→구현→밸런싱→검증→배포까지 자율 �
 `gamedev-playbook` MCP 서버가 연결돼 있다면 `playbook_section` 도구로도 같은 내용을 받을 수 있다 —
 **둘 중 아무것이나 쓰면 되고, 없어도 이 스킬만으로 완결된다.**
 
-| 지금 하는 일 | 펼칠 장 |
-|---|---|
-| 무엇을 만들지 고르는 중 | [`references/01-3-gate.md`](references/01-3-gate.md) |
-| 프로젝트 뼈대 잡는 중 | [`references/02-architecture.md`](references/02-architecture.md) |
-| **난이도·밸런스 작업 중** ★ | [`references/03-balancing.md`](references/03-balancing.md) |
-| 그래픽 퀄리티업 중 | [`references/04-graphics.md`](references/04-graphics.md) |
-| 사운드·BGM 작업 중 | [`references/05-audio.md`](references/05-audio.md) |
-| 성장·업그레이드 설계 중 | [`references/06-progression.md`](references/06-progression.md) |
-| 게임필·조작감 마감 중 | [`references/07-juice.md`](references/07-juice.md) |
-| 사용자에게 지시를 받는/주는 중 | [`references/08-prompting.md`](references/08-prompting.md) |
-| 게임을 직접 플레이해 검증하는 중 | [`references/09-harness.md`](references/09-harness.md) |
-| 온보딩·게임잼 제출 준비 중 | [`references/10-first-5-minutes.md`](references/10-first-5-minutes.md) |
-| CI·크론 자동화 거는 중 | [`references/11-automation.md`](references/11-automation.md) |
-| **새 게임 시작** — 먼저 열 것 | [`references/12-bootstrap.md`](references/12-bootstrap.md) |
-| 이 방법론이 이 장르에 맞나 의심될 때 | [`references/A-genre-agnostic.md`](references/A-genre-agnostic.md) |
-| 외부 애셋·폰트·라이선스 판단 | [`references/B-license-safe.md`](references/B-license-safe.md) |
+| 지금 하는 일 | 펼칠 장 (Primary EN) | 한국어 (KO) |
+|---|---|---|
+| 무엇을 만들지 고르는 중 | [`references/en/01-3-gate.md`](references/en/01-3-gate.md) | [`references/ko/01-3-gate.md`](references/ko/01-3-gate.md) |
+| 프로젝트 뼈대 잡는 중 | [`references/en/02-architecture.md`](references/en/02-architecture.md) | [`references/ko/02-architecture.md`](references/ko/02-architecture.md) |
+| **난이도·밸런스 작업 중** ★ | [`references/en/03-balancing.md`](references/en/03-balancing.md) | [`references/ko/03-balancing.md`](references/ko/03-balancing.md) |
+| 그래픽 퀄리티업 중 | [`references/en/04-graphics.md`](references/en/04-graphics.md) | [`references/ko/04-graphics.md`](references/ko/04-graphics.md) |
+| 사운드·BGM 작업 중 | [`references/en/05-audio.md`](references/en/05-audio.md) | [`references/ko/05-audio.md`](references/ko/05-audio.md) |
+| 성장·업그레이드 설계 중 | [`references/en/06-progression.md`](references/en/06-progression.md) | [`references/ko/06-progression.md`](references/ko/06-progression.md) |
+| 게임필·조작감 마감 중 | [`references/en/07-juice.md`](references/en/07-juice.md) | [`references/ko/07-juice.md`](references/ko/07-juice.md) |
+| 사용자에게 지시를 받는/주는 중 | [`references/en/08-prompting.md`](references/en/08-prompting.md) | [`references/ko/08-prompting.md`](references/ko/08-prompting.md) |
+| 게임을 직접 플레이해 검증하는 중 | [`references/en/09-harness.md`](references/en/09-harness.md) | [`references/ko/09-harness.md`](references/ko/09-harness.md) |
+| 온보딩·게임잼 제출 준비 중 | [`references/en/10-first-5-minutes.md`](references/en/10-first-5-minutes.md) | [`references/ko/10-first-5-minutes.md`](references/ko/10-first-5-minutes.md) |
+| CI·크론 자동화 거는 중 | [`references/en/11-automation.md`](references/en/11-automation.md) | [`references/ko/11-automation.md`](references/ko/11-automation.md) |
+| **새 게임 시작** — 먼저 열 것 | [`references/en/12-bootstrap.md`](references/en/12-bootstrap.md) | [`references/ko/12-bootstrap.md`](references/ko/12-bootstrap.md) |
+| 이 방법론이 이 장르에 맞나 의심될 때 | [`references/en/A-genre-agnostic.md`](references/en/A-genre-agnostic.md) | [`references/ko/A-genre-agnostic.md`](references/ko/A-genre-agnostic.md) |
+| 외부 애셋·폰트·라이선스 판단 | [`references/en/B-license-safe.md`](references/en/B-license-safe.md) | [`references/ko/B-license-safe.md`](references/ko/B-license-safe.md) |
+
 
 ## 0. 채택 기준 — 3-Gate
 
