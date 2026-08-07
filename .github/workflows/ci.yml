@@ -26,7 +26,13 @@ jobs:
         with:
           node-version: 20
 
-      # 의존성 0개 — npm ci 할 것이 없다. 그대로 테스트를 돌린다.
+      # dist/ 는 .gitignore 대상이라 체크아웃에 없다. 테스트가 dist/data.json을 읽으므로
+      # 먼저 만들어 준다. build:site는 dist/ 에만 쓰므로 아래 합본 신선도 검사를
+      # 무력화하지 않는다 — 여기서 `npm run build`(합본까지 재생성)를 부르면 안 된다.
+      - name: 웹 앱 산출물 생성
+        run: npm run build:site
+
+      # 의존성 0개 — npm ci 할 것이 없다.
       - name: MCP 스모크 + 정합성 검사
         run: npm test
 
@@ -35,9 +41,9 @@ jobs:
       - name: 빌드가 멱등한지 확인
         run: |
           npm run build
-          if ! git diff --quiet -- PLAYBOOK.md; then
-            echo "::error file=PLAYBOOK.md::PLAYBOOK.md가 references/*.md와 어긋납니다. 'npm run build' 후 커밋하세요."
-            git diff --stat -- PLAYBOOK.md
+          if ! git diff --quiet -- PLAYBOOK.md PLAYBOOK.ko.md; then
+            echo "::error::합본이 references/{en,ko}/*.md 와 어긋납니다. 'npm run build' 후 커밋하세요."
+            git diff --stat -- PLAYBOOK.md PLAYBOOK.ko.md
             exit 1
           fi
-          echo "PLAYBOOK.md는 references/*.md의 최신 합본입니다."
+          echo "PLAYBOOK.md · PLAYBOOK.ko.md 는 references/{en,ko}/*.md 의 최신 합본입니다."
