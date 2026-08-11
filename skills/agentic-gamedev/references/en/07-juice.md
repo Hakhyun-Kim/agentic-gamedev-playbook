@@ -12,6 +12,16 @@ Low-cost, high-impact polish features to make games feel responsive and tactile.
 - [ ] **First-Time Coach Chips:** Single-use coach tips with immediate start buttons.
 - [ ] **Shareable Result Cards:** Canvas-rendered summary card PNG generator for social sharing.
 
+### 7.0.1 Localized Flash Budget
+
+Game feel does not require flashing the entire screen. Ordinary hits, combines, skills, and boss warnings should emphasize only the unit, card, route, or HUD element that caused the event.
+
+1. **Do not use full-screen white or color flashes.** Use effect-centered auras, rings, particles, and damage numbers instead of overlays that cover the whole battlefield.
+2. **Keep each emphasis short and restrained:** default to 400ms or less, low alpha, and a small part of the play area. Merge or refresh rapid repeat events rather than stacking new flashes.
+3. **Localize danger signals too.** Base damage, low health, and boss warnings should live at the castle health bar, gate, or boss banner—the place that identifies their cause.
+4. **Reinforce meaning with other signals.** Use sound, a brief camera nudge, unit tint, and floating numbers to preserve impact. Do not substitute stronger visual stimulation for clear information.
+5. **Verify:** observe at least five seconds of sustained combat on mobile and lower-end screens; the player should be able to identify the source and target of each glow immediately.
+
 ### 7.1 Centralizing Feedback Dispatchers
 
 Attach sound effects, visual popups, and toast notifications to a **centralized action queue** rather than scattering invocations across individual feature modules.

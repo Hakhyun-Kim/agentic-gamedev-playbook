@@ -181,6 +181,24 @@ export * from './engine/combat.js';
 
 Keeping consumer import paths identical keeps refactoring diffs clean and isolates risk during code reorganizations.
 
+### 2.9 Major-Feature Subtraction and Quality Gates
+
+A major feature is not complete when its happy path first works. When a new loop replaces or absorbs an older one, unreachable screens, commands, save branches, bots, and terminology can leave the game in a confusing "half of each game" state. Treat the following two passes as part of the feature, not as optional polish.
+
+**Before implementation — subtraction audit**
+
+1. List every production entry point touched by the replacement: UI controls and routes, input bindings, data/config, save and migration paths, bot policy, tests, and player-facing copy.
+2. Classify each old path as **remove**, **isolate for compatibility/test coverage**, or **keep**. Give every kept path a named owner and a reason; do not leave obsolete code reachable merely because it still compiles.
+3. Capture the current deterministic-test and smoke-test baseline before moving code. Move legacy fixtures out of the production path where possible so the active loop has one obvious source of truth.
+
+**After implementation — independent quality pass**
+
+1. Replay the first minute and the full new loop on desktop and mobile. Check that the next action, state change, reward, and failure signal are legible without old labels or controls competing for attention.
+2. Review information hierarchy, visual contrast and motion scope, feedback/sound, input latency, performance, and accessibility. Pick the highest-value one to three upgrades, or record why no upgrade is warranted with evidence.
+3. Re-run deterministic engine tests and the real-player-equivalent balance bot, then perform the relevant manual smoke path. Document removed and deferred legacy items with their follow-up owner.
+
+Call a change "major" when it alters the core loop or crosses two or more systems. It is ready to ship only after both gates are recorded; this makes cleanup and quality review scheduled work instead of a promise made after scope has already expanded.
+
 ---
 
 ## 3. Automated AI Balancing ★ (Core Engine)
@@ -452,6 +470,16 @@ Low-cost, high-impact polish features to make games feel responsive and tactile.
 - [ ] **Range Circles & Boss Health Bars:** Standard UI indicators (range indicators, upcoming wave previews).
 - [ ] **First-Time Coach Chips:** Single-use coach tips with immediate start buttons.
 - [ ] **Shareable Result Cards:** Canvas-rendered summary card PNG generator for social sharing.
+
+### 7.0.1 Localized Flash Budget
+
+Game feel does not require flashing the entire screen. Ordinary hits, combines, skills, and boss warnings should emphasize only the unit, card, route, or HUD element that caused the event.
+
+1. **Do not use full-screen white or color flashes.** Use effect-centered auras, rings, particles, and damage numbers instead of overlays that cover the whole battlefield.
+2. **Keep each emphasis short and restrained:** default to 400ms or less, low alpha, and a small part of the play area. Merge or refresh rapid repeat events rather than stacking new flashes.
+3. **Localize danger signals too.** Base damage, low health, and boss warnings should live at the castle health bar, gate, or boss banner—the place that identifies their cause.
+4. **Reinforce meaning with other signals.** Use sound, a brief camera nudge, unit tint, and floating numbers to preserve impact. Do not substitute stronger visual stimulation for clear information.
+5. **Verify:** observe at least five seconds of sustained combat on mobile and lower-end screens; the player should be able to identify the source and target of each glow immediately.
 
 ### 7.1 Centralizing Feedback Dispatchers
 
